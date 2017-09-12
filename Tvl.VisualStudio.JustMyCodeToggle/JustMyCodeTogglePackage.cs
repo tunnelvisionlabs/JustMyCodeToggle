@@ -34,11 +34,11 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
             }
         }
 
-        public EnvDTE80.DTE2 ApplicationObject
+        public EnvDTE.DTE ApplicationObject
         {
             get
             {
-                return ServiceProvider.GetService(typeof(EnvDTE._DTE)) as EnvDTE80.DTE2;
+                return ServiceProvider.GetService(typeof(EnvDTE._DTE)) as EnvDTE.DTE;
             }
         }
 
