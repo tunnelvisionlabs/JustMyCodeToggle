@@ -9,12 +9,10 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     using Microsoft.VisualStudio.Shell;
     using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
     using IMenuCommandService = System.ComponentModel.Design.IMenuCommandService;
-    using UICONTEXT = Microsoft.VisualStudio.VSConstants.UICONTEXT;
 
     [Guid(JustMyCodeToggleConstants.guidJustMyCodeTogglePackageString)]
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideMenuResource(1000, 1)]
-    [ProvideAutoLoad(UICONTEXT.SolutionExists_string)]
     internal class JustMyCodeTogglePackage : Package
     {
         private readonly OleMenuCommand _command;
