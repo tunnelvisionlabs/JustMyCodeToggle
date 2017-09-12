@@ -12,8 +12,9 @@
         <Strings>
           <ButtonText>Just My Code</ButtonText>
           <ToolTipText>Toggle the Just My Code debugger option</ToolTipText>
-          <CanonicalName>JustMyCodeToggle</CanonicalName>
-          <LocCanonicalName>JustMyCodeToggle</LocCanonicalName>
+          <CommandName>Debug.JustMyCodeToggle</CommandName>
+          <CanonicalName>Debug.JustMyCodeToggle</CanonicalName>
+          <LocCanonicalName>Debug.JustMyCodeToggle</LocCanonicalName>
         </Strings>
       </Button>
     </Buttons>
