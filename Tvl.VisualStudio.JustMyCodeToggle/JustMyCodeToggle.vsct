@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="VsDbgCmd.h" />
+  <Extern href="vsdebugguids.h" />
   <Extern href="vsshlids.h" />
   <Include href="KnownImageIds.vsct"/>
 
@@ -19,6 +21,18 @@
       </Button>
     </Buttons>
   </Commands>
+
+  <CommandPlacements>
+    <!-- In the call stack context menu, above "Show External Code" -->
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x03E0">
+      <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_OPTIONS"/>
+    </CommandPlacement>
+
+    <!-- In the Debug toolbar, after "Show Threads in Source" -->
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0320">
+      <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_TOOLBAR_WATCH"/>
+    </CommandPlacement>
+  </CommandPlacements>
 
   <Symbols>
     <GuidSymbol name="guidJustMyCodeTogglePackage" value="{73702199-D0C5-4863-8203-99D41B34DD2D}" />
