@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="Tvl.VisualStudio.JustMyCodeToggle.0E2F0645-E87E-433C-B82B-C89EAE52A0FD" Version="1.0.0" Language="en-US" Publisher="Sam Harwell" />
+    <DisplayName>Just My Code Toggle</DisplayName>
+    <Description>Adds the Just My Code command button to Visual Studio.</Description>
+    <MoreInfo>https://github.com/tunnelvisionlabs/JustMyCodeToggle</MoreInfo>
+    <License>LICENSE.txt</License>
+    <!-- Don't include the GettingStartedGuide because it makes a web browser pop up after installation -->
+    <!--<GettingStartedGuide>https://marketplace.visualstudio.com/items?itemName=SamHarwell.JustMyCodeToggle</GettingStartedGuide>-->
+    <ReleaseNotes>https://github.com/tunnelvisionlabs/JustMyCodeToggle/releases/tag/1.0.0</ReleaseNotes>
+    <!--<Icon></Icon>-->
+    <!--<PreviewImage></PreviewImage>-->
+    <Tags>debugging, just my code</Tags>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Version="[11.0,16.0)" Id="Microsoft.VisualStudio.Community" />
+    <InstallationTarget Version="[11.0,16.0)" Id="Microsoft.VisualStudio.Pro" />
+  </Installation>
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+  </Assets>
+</PackageManifest>

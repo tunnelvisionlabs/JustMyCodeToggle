@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="vsshlids.h" />
+  <Include href="KnownImageIds.vsct"/>
+
+  <Commands package="guidJustMyCodeTogglePackage">
+    <Buttons>
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0000" type="Button">
+        <Icon guid="ImageCatalogGuid" id="JustMyCode" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Just My Code</ButtonText>
+          <ToolTipText>Toggle the Just My Code debugger option</ToolTipText>
+          <CanonicalName>JustMyCodeToggle</CanonicalName>
+          <LocCanonicalName>JustMyCodeToggle</LocCanonicalName>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <Symbols>
+    <GuidSymbol name="guidJustMyCodeTogglePackage" value="{73702199-D0C5-4863-8203-99D41B34DD2D}" />
+
+    <GuidSymbol name="guidJustMyCodeTogglePackageCmdSet" value="{B1317E30-CFDA-47CA-90A0-95E894B150A0}">
+      <IDSymbol name="cmdidJustMyCodeToggle" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>
