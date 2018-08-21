@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
+using Microsoft;
+
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
@@ -39,9 +41,12 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            await base.InitializeAsync(cancellationToken, progress);
+
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             var mcs = (IMenuCommandService)await GetServiceAsync(typeof(IMenuCommandService));
+            Assumes.Present(mcs);
             mcs.AddCommand(_command);
         }
 
