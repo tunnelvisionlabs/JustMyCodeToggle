@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="Tvl.VisualStudio.JustMyCodeToggle.0E2F0645-E87E-433C-B82B-C89EAE52A0FD" Version="1.1.0" Language="en-US" Publisher="Sam Harwell" />
+    <Identity Id="Tvl.VisualStudio.JustMyCodeToggle.0E2F0645-E87E-433C-B82B-C89EAE52A0FD" Version="1.2.0" Language="en-US" Publisher="Sam Harwell" />
     <DisplayName>Just My Code Toggle</DisplayName>
     <Description>Adds the Just My Code command button to Visual Studio.</Description>
     <MoreInfo>https://github.com/tunnelvisionlabs/JustMyCodeToggle</MoreInfo>
