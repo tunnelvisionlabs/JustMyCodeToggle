@@ -1,20 +1,19 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
-using Microsoft;
-
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
     using System.ComponentModel.Design;
     using System.Runtime.InteropServices;
     using System.Threading;
+    using Microsoft;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using IMenuCommandService = System.ComponentModel.Design.IMenuCommandService;
     using Task = System.Threading.Tasks.Task;
 
-    [Guid(JustMyCodeToggleConstants.guidJustMyCodeTogglePackageString)]
+    [Guid(JustMyCodeToggleConstants.GuidJustMyCodeTogglePackageString)]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [ProvideMenuResource(1000, 1)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
@@ -24,7 +23,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
         public JustMyCodeTogglePackage()
         {
-            var id = new CommandID(JustMyCodeToggleConstants.guidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.cmdidJustMyCodeToggle);
+            var id = new CommandID(JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
             EventHandler invokeHandler = HandleInvokeJustMyCodeToggle;
             EventHandler changeHandler = HandleChangeJustMyCodeToggle;
             EventHandler beforeQueryStatus = HandleBeforeQueryStatusJustMyCodeToggle;
