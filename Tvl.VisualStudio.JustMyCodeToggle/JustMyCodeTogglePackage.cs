@@ -1,19 +1,24 @@
 ﻿// Copyright (c) Tunnel Vision Laboratories, LLC. All Rights Reserved.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
+using Microsoft;
+
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
     using System.ComponentModel.Design;
     using System.Runtime.InteropServices;
+    using System.Threading;
+    using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
-    using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
     using IMenuCommandService = System.ComponentModel.Design.IMenuCommandService;
+    using Task = System.Threading.Tasks.Task;
 
     [Guid(JustMyCodeToggleConstants.guidJustMyCodeTogglePackageString)]
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [ProvideMenuResource(1000, 1)]
-    internal class JustMyCodeTogglePackage : Package
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
+    internal class JustMyCodeTogglePackage : AsyncPackage
     {
         private readonly OleMenuCommand _command;
 
@@ -26,27 +31,22 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
             _command = new OleMenuCommand(invokeHandler, changeHandler, beforeQueryStatus, id);
         }
 
-        public SVsServiceProvider ServiceProvider
-        {
-            get
-            {
-                return new VsServiceProviderWrapper(this);
-            }
-        }
-
         public EnvDTE.DTE ApplicationObject
         {
             get
             {
-                return ServiceProvider.GetService(typeof(EnvDTE._DTE)) as EnvDTE.DTE;
+                return GetService(typeof(EnvDTE._DTE)) as EnvDTE.DTE;
             }
         }
 
-        protected override void Initialize()
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            base.Initialize();
+            await base.InitializeAsync(cancellationToken, progress);
 
-            var mcs = (IMenuCommandService)GetService(typeof(IMenuCommandService));
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            var mcs = (IMenuCommandService)await GetServiceAsync(typeof(IMenuCommandService));
+            Assumes.Present(mcs);
             mcs.AddCommand(_command);
         }
 
