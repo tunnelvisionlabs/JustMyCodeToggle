@@ -8,7 +8,7 @@
     <License>LICENSE.txt</License>
     <!-- Don't include the GettingStartedGuide because it makes a web browser pop up after installation -->
     <!--<GettingStartedGuide>https://marketplace.visualstudio.com/items?itemName=SamHarwell.JustMyCodeToggle</GettingStartedGuide>-->
-    <ReleaseNotes>https://github.com/tunnelvisionlabs/JustMyCodeToggle/releases/latest</ReleaseNotes>
+    <ReleaseNotes>https://github.com/tunnelvisionlabs/JustMyCodeToggle/releases/tag/1.2.0</ReleaseNotes>
     <!--<Icon></Icon>-->
     <!--<PreviewImage></PreviewImage>-->
     <Tags>debugging, just my code</Tags>
