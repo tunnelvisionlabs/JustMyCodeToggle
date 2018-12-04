@@ -8,9 +8,9 @@
     <Description>Adds the Just My Code command button to Visual Studio.</Description>
     <Company>Tunnel Vision Laboratories, LLC</Company>
     <Copyright>Copyright © Sam Harwell 2017</Copyright>
-    <Version>1.2.0.0</Version>
-    <FileVersion>1.2.0.0</FileVersion>
-    <InformationalVersion>1.2.0</InformationalVersion>
+    <Version>1.3.0.0</Version>
+    <FileVersion>1.3.0.0</FileVersion>
+    <InformationalVersion>1.3.0-dev</InformationalVersion>
 
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <UseCodebase>true</UseCodebase>
