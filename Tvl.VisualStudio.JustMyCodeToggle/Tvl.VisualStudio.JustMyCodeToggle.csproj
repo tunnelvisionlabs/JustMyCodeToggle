@@ -1,94 +1,102 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project>
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
-
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
-
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <Description>Adds the Just My Code command button to Visual Studio.</Description>
     <Company>Tunnel Vision Laboratories, LLC</Company>
     <Copyright>Copyright © Sam Harwell 2017</Copyright>
-    <Version>1.3.0.0</Version>
-    <FileVersion>1.3.0.0</FileVersion>
-    <InformationalVersion>1.3.0-dev</InformationalVersion>
-
+    <Version>1.4.0.0</Version>
+    <FileVersion>1.4.0.0</FileVersion>
+    <InformationalVersion>1.4.0-dev</InformationalVersion>
+    <ProjectGuid>{10CAD392-E083-41EB-92C9-B5F3142FA9F8}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <UseCodebase>true</UseCodebase>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
-
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>SharedKey.snk</AssemblyOriginatorKeyFile>
+    <CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
-    <!-- This property disables extension deployment for command line builds; required for AppVeyor -->
-    <DeployExtension>False</DeployExtension>
-
-    <!-- Ideally this is always enabled, but that tends to hurt developer productivity -->
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <!-- StyleCop Analyzers configuration -->
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.32112.339" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.5.4065">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="JustMyCodeToggleConstants.cs" />
+    <Compile Include="JustMyCodeTogglePackage.cs" />
     <None Include="$(CodeAnalysisRuleSet)" Condition="'$(CodeAnalysisRuleSet)' != ''" Link="%(Filename)%(Extension)" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.1.192" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.14.0" Version="14.0.23205" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="10.0.30319" />
-    <PackageReference Include="EnvDTE" Version="8.0.1" />
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
-
   <ItemGroup>
-    <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
-    <None Include="source.extension.vsixmanifest" />
+    <Reference Include="System" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="..\LICENSE.txt">
       <Link>LICENSE.txt</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
     <VSCTCompile Include="JustMyCodeToggle.vsct">
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Update="VSPackage.resx">
       <LogicalName>VSPackage.resources</LogicalName>
       <MergeWithCTO>true</MergeWithCTO>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
-
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
 </Project>
