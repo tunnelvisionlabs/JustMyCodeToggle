@@ -113,6 +113,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
         {
             await UpdateCheckedState();
             await SetValue(!Command.Checked);
+            await UpdateCheckedState();
             await base.ExecuteAsync(e);
         }
     }
