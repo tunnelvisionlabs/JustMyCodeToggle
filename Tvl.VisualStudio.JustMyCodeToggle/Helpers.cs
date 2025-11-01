@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Community.VisualStudio.Toolkit;
 using Microsoft.VisualStudio;
@@ -13,6 +14,32 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     /// </summary>
     public static class ProjectExtensions
     {
+        public static bool IsVS2026 => _isVS2026.Value;
+        private static Lazy<bool> _isVS2026 = new ( () => 
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            try
+            {
+                var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
+                if (shell != null)
+                {
+                    shell.GetProperty((int)__VSSPROPID5.VSSPROPID_ReleaseVersion, out object version);
+                    if (version is string versionString)
+                    {
+                        // VS 2026 is version 18.x
+                        if (versionString.StartsWith("18.") || versionString.StartsWith("19."))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If we can't detect version, assume older version
+            }
+            return false;
+        });
         public static T GetTypedService<T>(this AsyncPackage package) where T : class => package.GetService<T, T>();
         public static async Task<EnvDTE.Project> GetDTEProjectFromIvsProject(this IVsProject proj)
         {

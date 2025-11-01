@@ -9,43 +9,55 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     using System.Threading;
     using Community.VisualStudio.Toolkit;
     using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.Extensibility;
+    using Microsoft.VisualStudio.Extensibility.Shell;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Tvl.VisualStudio.JustMyCodeToggle.Managers;
     using Task = System.Threading.Tasks.Task;
 
-    [Guid(PackageGuids.guidJustMyCodeTogglePackageCmdSetString)]
+    [Guid(PackageGuids.guidJustMyCodeTogglePackageString)]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [ProvideMenuResource(1000, 1)]
     [InstalledProductRegistration(Vsix.Name, Vsix.Description, Vsix.Version)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     internal class JustMyCodeTogglePackage : ToolkitPackage
     {
 
         protected ProjectEventHandler ProjectEventHandler;
 
         private StartupProjectManager _startupProjectManager;
-        private LaunchProfileManager _launchProfileManager;
-        private SettingsManager _settingsManager;
 
         internal T RegisterService<T>(T service){
             AddService(typeof(T),(_,_,_) => Task.FromResult<object>(service),promote:true);
             return service;
         }
-
+        public JustMyCodeTogglePackage(){
+            instance = this;
+        }
+        public static JustMyCodeTogglePackage instance;
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
 
             //await Helpers.Init();
             // Initialize managers
             _startupProjectManager = RegisterService(new StartupProjectManager());
-            _launchProfileManager = RegisterService(new LaunchProfileManager(_startupProjectManager));
-            _settingsManager = RegisterService(new SettingsManager((IVsSettingsManager)await VS.Services.GetSettingsManagerAsync()));
-
+            RegisterService(new LaunchProfileManager(_startupProjectManager));
+            RegisterService(new SettingsStoreManager((IVsSettingsManager)await VS.Services.GetSettingsManagerAsync()));
+            RegisterService(new DteManager());
+            RegisterService(new DebuggerServiceManager());
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await this.RegisterCommandsAsync();
             await base.InitializeAsync(cancellationToken, progress);
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            
+            
+            var reqType = typeof(VisualStudioExtensibility);
+            var asm = reqType.Assembly;
             var globalSolutionSvc = await VS.GetServiceAsync<SVsSolution, IVsSolution>();
+                    //VisualStudioExtensibility extensibility = await this.GetServiceAsync<VisualStudioExtensibility, VisualStudioExtensibility>();
+                    //await extensibility.Shell().ShowPromptAsync("Hello from in-proc", PromptOptions.OK, cancellationToken);
+
+
             ProjectEventHandler = new(_startupProjectManager);
             globalSolutionSvc.AdviseSolutionEvents(ProjectEventHandler, out _);
             var monitor = await VS.GetServiceAsync<SVsShellMonitorSelection, IVsMonitorSelection>();

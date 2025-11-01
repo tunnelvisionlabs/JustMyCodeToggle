@@ -18,6 +18,10 @@ insert_final_newline = true
 # Organize using directives
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
+# VSEXTPREVIEW_SETTINGS: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+dotnet_diagnostic.VSEXTPREVIEW_SETTINGS.severity = none
+
+
 
 # Code style defaults
 csharp_new_line_before_open_brace = all

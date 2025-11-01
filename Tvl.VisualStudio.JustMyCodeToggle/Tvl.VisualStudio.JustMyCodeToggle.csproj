@@ -20,6 +20,8 @@
 		<BaseIntermediateOutputPath>obj</BaseIntermediateOutputPath>
 		<IntermediateOutputPath>obj/int</IntermediateOutputPath>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<Configurations>Debug;Release</Configurations>
+        <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
 	</PropertyGroup>
 	<PropertyGroup>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
@@ -36,28 +38,30 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
-		<PackageReference Include="CI.Microsoft.VisualStudio.ProjectSystem.Managed" Version="17.7.37.99" />
-		<PackageReference Include="Microsoft.Build" Version="17.7.0" />
+		<PackageReference Include="CI.Microsoft.VisualStudio.ProjectSystem.Managed" Version="17.12.42" />
+		<PackageReference Include="Microsoft.Build" Version="17.14.28" />
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility" Version="17.14.2098" />
+
 		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem" Version="17.9.380" />
-		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Query" Version="17.9.380" />
+		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Query" Version="17.14.145" />
 		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.SDK" Version="17.9.380" />
+        <PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40608" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40608" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.14.40265" ExcludeAssets="runtime" />        
 		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk.Tools" Version="17.9.380">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-	  <None Remove="JustMyCodeToggle.vsct" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Community.VisualStudio.Toolkit.17" Version="17.0.527" ExcludeAssets="Runtime">
+		<PackageReference Include="Community.VisualStudio.Toolkit.17" Version="17.0.545" ExcludeAssets="Runtime">
 			<IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="MessagePack" Version="2.5.192" />
+		<PackageReference Include="MessagePack" Version="3.1.4" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json" />
 		<None Include="$(CodeAnalysisRuleSet)" Condition="'$(CodeAnalysisRuleSet)' != ''" Link="%(Filename)%(Extension)" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.VSSDK.BuildTools" PrivateAssets="All" Version="17.12.2069" />
 		<PackageReference Include="Community.VisualStudio.VSCT" Version="16.0.29.6" PrivateAssets="all" />		
 	</ItemGroup>
 	<ItemGroup>
@@ -72,39 +76,26 @@
 			<Link>LICENSE.txt</Link>
 			<IncludeInVSIX>true</IncludeInVSIX>
 		</Content>
-		<EmbeddedResource Include="JustMyCodeToggle.vsct">
-		  <Generator>VsctGenerator</Generator>
-		  <LastGenOutput>JustMyCodeToggle.cs</LastGenOutput>
-		</EmbeddedResource>
 		<EmbeddedResource Include="source.extension.vsixmanifest">
 			<Generator>VsixManifestGenerator</Generator>
 			<LastGenOutput>source.extension.cs</LastGenOutput>
 		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
-		<VSCTCompile Include="JustMyCodeToggle.vsct">
-			<ResourceName>1000</ResourceName>
-			<SubType>Designer</SubType>
-		</VSCTCompile>
+        <Content Include="JustMyCodeToggle.vsct">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <IncludeInVSIX>true</IncludeInVSIX>
+        </Content>
+        <VSCTCompile Include="JustMyCodeToggle.vsct">
+            <ResourceName>Menus.ctmenu</ResourceName>
+        </VSCTCompile>
 	</ItemGroup>
 	<ItemGroup>
-	  <Compile Update="JustMyCodeToggle.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>JustMyCodeToggle.vsct</DependentUpon>
-	  </Compile>
 	  <Compile Update="source.extension.cs">
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>
 	    <DependentUpon>source.extension.vsixmanifest</DependentUpon>
 	  </Compile>
-	</ItemGroup>
-	
-	<ItemGroup>
-		<EmbeddedResource Update="VSPackage.resx">
-			<LogicalName>VSPackage.resources</LogicalName>
-			<MergeWithCTO>true</MergeWithCTO>
-		</EmbeddedResource>
 	</ItemGroup>
 	<Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 	<Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />

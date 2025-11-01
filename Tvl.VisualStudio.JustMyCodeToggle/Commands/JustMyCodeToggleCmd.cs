@@ -5,40 +5,40 @@ using EnvDTE;
 
 namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
 {
-    [Command(PackageIds.JMCMenuController)]
+    [Command(PackageGuids.guidJustMyCodeTogglePackageCmdSetString,PackageIds.JMCMenuController)]
     internal class MenuBtnCmd : BaseCommand<MenuBtnCmd>
     {
-        public MenuBtnCmd()
-        {
-            instance = this;
-        }
+        public MenuBtnCmd() => instance = this;
         internal static MenuBtnCmd instance;
-
     }
 
-    [Command(PackageIds.JMCJustMyCodeBtn)]
-    internal class JustMyCodeToggleCmd() : ToggleSettingCmd<int, JustMyCodeToggleCmd>("Debugger", "JustMyCode", 1, 0)
+    [Command(PackageGuids.guidJustMyCodeTogglePackageCmdSetString,PackageIds.JMCJustMyCodeBtn)]
+    internal class JustMyCodeBtn : OurOLEButton<JustMyCodeCmd, JustMyCodeBtn>
     {
-        protected override void SetCheckedToMatch(int cur)
+    }
+
+    internal class JustMyCodeCmd : ToggleSettingDynamicSetterCmd<bool>
+    {
+        private SettingsStoreSetter<bool> settingStoreSetter;
+        private DteStoreSetter<bool> dteSetter;
+
+        protected override Task<ISetSettingInterface<bool>[]> GetSetters()
+        {
+            ISetSettingInterface<bool> setter = ProjectExtensions.IsVS2026 ? dteSetter : settingStoreSetter;
+            return Task.FromResult<ISetSettingInterface<bool>[]>([setter]);
+        }
+        override protected void SetCheckedToMatch(bool cur)
         {
             base.SetCheckedToMatch(cur);
             if (MenuBtnCmd.instance != null)
-                MenuBtnCmd.instance.Command.Checked = Command.Checked; //keep menu in sync with us
+                MenuBtnCmd.instance.Command.Checked = Native.IsChecked(); //keep menu in sync with us
         }
-        protected override Task InitializeCompletedAsync()
-        {
-            DelaySetChecked();
-            return base.InitializeCompletedAsync();
-        }
-        /// <summary>
-        /// to set the related command items not initalized before
-        /// </summary>
-        private async void DelaySetChecked()
-        {
-            await Task.Delay(1000);
-            //await JoinableTaskFactory.SwitchToMainThreadAsync();
-            SetCheckedToMatch(Command.Checked ? 1 : 0);
 
+        public JustMyCodeCmd() : base(true, false)
+        {
+            this.settingStoreSetter = new("Debugger", "JustMyCode");
+            this.dteSetter = new("Debugging", "General", "EnableJustMyCode");
         }
+
     }
 }

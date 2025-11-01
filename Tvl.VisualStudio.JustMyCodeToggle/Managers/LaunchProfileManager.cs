@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.ProjectSystem;
 using Microsoft.VisualStudio.ProjectSystem.Debug;
@@ -19,10 +20,14 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
         {
             _startupProjectManager = startupProjectManager;
         }
-
+        public async Task<string> GetProfileEnvVar(string varName)
+        {
+           return (await GetLaunchProfile())?.EnvironmentVariables.FirstOrDefault(a => a.Key == varName).Value;
+        }
+        public bool SupportsLaunchProfiles => _startupProjectManager.ActiveProjectSupportsCPSProfiles;
         public Task UpdateLaunchProfileENVVars(bool isDelete, params KeyValuePair<string, string>[] vars)
         {
-            if (!_startupProjectManager.ActiveProjectSupportsCPSProfiles)
+            if (! SupportsLaunchProfiles)
                 return Task.CompletedTask;
 
             return TryModifyActiveProfile((profile) =>

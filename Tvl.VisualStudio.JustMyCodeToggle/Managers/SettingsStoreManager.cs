@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
@@ -8,17 +9,20 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
     /// <summary>
     /// Manages Visual Studio settings storage and retrieval
     /// </summary>
-    public class SettingsManager
+    public class SettingsStoreManager
     {
         private readonly IVsSettingsManager _settingsManager;
 
-        public SettingsManager(IVsSettingsManager settingsManager)
+        public SettingsStoreManager(IVsSettingsManager settingsManager)
         {
             _settingsManager = settingsManager;
         }
 
+        
+
         public T GetSetting<T>(string collectionPath, string propertyName)
         {
+            // Legacy settings store for VS 2022 and earlier
             var store = GetSettingsStore();
             object ret = null;
             int res = 0;
@@ -36,7 +40,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
             else if (typeof(T) == typeof(bool))
             {
                 res = store.GetBool(collectionPath, propertyName, out var val);
-                ret = val;
+                ret = val == 1;
             }
             else
                 throw new NotImplementedException($"Type {typeof(T)} is not supported for settings");
@@ -86,6 +90,4 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
             return ret;
         }
     }
-
-
 }

@@ -12,8 +12,19 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
     /// </summary>
     public class StartupProjectManager
     {
-        public bool ActiveProjectSupportsCPSProfiles { get; private set; }
+        
+        public bool ActiveProjectSupportsCPSProfiles
+        {
+            get; private set
+            {
+                if (field == value)
+                    return;
+                field = value;
+                ActiveProjectSupportsCPSProfilesChanged?.Invoke(null, EventArgs.Empty);
+            }
+        }
         public event EventHandler StartupProjectChanged;
+        public event EventHandler ActiveProjectSupportsCPSProfilesChanged;
         private string lastStartupProject;
         public bool HasStartupProject => !string.IsNullOrWhiteSpace(lastStartupProject);
 
@@ -52,9 +63,15 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
                 ActiveProjectSupportsCPSProfiles = hProject?.IsCapabilityMatch("LaunchProfiles") == true;
 
                 if (oldVal != lastStartupProject || forceEvent)
+                {
+                    ActiveProjectSupportsCPSProfilesChanged?.Invoke(null, EventArgs.Empty);
                     StartupProjectChanged?.Invoke(null, EventArgs.Empty);
+                }
             }
-            catch { }
+            catch
+            {
+                ActiveProjectSupportsCPSProfiles = false;
+            }
         }
     }
 
