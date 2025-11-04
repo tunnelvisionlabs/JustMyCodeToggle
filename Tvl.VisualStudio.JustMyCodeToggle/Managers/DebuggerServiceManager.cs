@@ -1,9 +1,11 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE100;
 using EnvDTE80;
+using EnvDTE90;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 
@@ -39,6 +41,14 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
             if (debugger == null)
                 throw new Exception("Debugger5 interface not available.");
             return debugger;
+        }
+
+        protected DTE2 GetDTE2()
+        {
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            if (dte == null)
+                throw new Exception("DTE2 service not found.");
+            return dte;
         }
 
         public async Task SetLoadAllModulesAsync(bool loadAllModulesUnlessExcluded)

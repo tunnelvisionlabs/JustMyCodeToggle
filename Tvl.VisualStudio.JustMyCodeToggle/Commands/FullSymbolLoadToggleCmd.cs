@@ -27,40 +27,39 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
             await _settingsManager.SetLoadAllModulesAsync(val);
         }
     }
-    [Command(PackageGuids.guidJustMyCodeTogglePackageCmdSetString,PackageIds.JMCSymbolLoadBtn)]
+    [Command(PackageGuids.guidJustMyCodeTogglePackageCmdSetString, PackageIds.JMCSymbolLoadBtn)]
     internal class FullSymbolLoadBtn : OurOLEButton<FullSymbolLoadCmd, FullSymbolLoadBtn>
     {
-       
+
         protected override void BeforeQueryStatus(EventArgs e)
         {
-            var useCmd = ! ProjectExtensions.IsVS2026;
+            var useCmd = !ProjectExtensions.IsVS2026;
             useCmd = true;
 
             this.Command.Visible = useCmd;
 
             //this.Command.Visible = true;
-            
+
             //this.Command.Enabled = useCmd;
             //this.Command.Supported = useCmd;
-            
 
-                //this.Command.Enabled = useCmd;
-                //this.Command.Supported = useCmd;
-                
+
+            //this.Command.Enabled = useCmd;
+            //this.Command.Supported = useCmd;
+
             base.BeforeQueryStatus(e);
         }
         protected override Task InitializeCompletedAsync()
         {
 
-            return base.InitializeCompletedAsync();;
+            return base.InitializeCompletedAsync(); ;
         }
-        
+
+        protected DteManager dteManager;
         protected override async Task ExecuteAsync(OleMenuCmdEventArgs e)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            
-            var dte = JustMyCodeTogglePackage.GetGlobalService(typeof(DTE)) as DTE;
-            dte.ExecuteCommand("Tools.Options", "Debugging.Symbols");
+            dteManager ??= JustMyCodeTogglePackage.instance.GetTypedService<DteManager>();
+            await dteManager.ExecuteCommandAsync("Tools.Options", "Debugging.Symbols");
 
 
             //return base.ExecuteAsync(e);
@@ -70,7 +69,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     [VisualStudioContribution]
     internal class FullSymbolLoadExtensibilityBtn : ToggleCommand //  OurExtensibilityToggleButton<FullSymbolLoadCmd>
     {
-        
+
         public override Task InitializeAsync(CancellationToken cancellationToken)
         {
             //JustMyCodeTogglePackage.instance.RegisterService(new ExtensibilitySettingManager(Extensibility));
@@ -82,7 +81,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
             // displayName, is set above. DisplayName is localized and references an entry in .vsextension\string-resources.json.
             Icon = new(ImageMoniker.KnownValues.Extension, IconSettings.IconAndText),
             Flags = CommandFlags.CanToggle,
-            
+
             //VsctCommandMapping = new VsctId(new(PackageGuids.guidJustMyCodeTogglePackageCmdSetString),PackageIds.JMCSymbolLoadBtn),
             Placements = [
             CommandPlacement.KnownPlacements.ExtensionsMenu,
