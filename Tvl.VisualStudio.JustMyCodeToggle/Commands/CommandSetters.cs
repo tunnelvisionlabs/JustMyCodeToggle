@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Extensibility.Settings;
 using Microsoft.VisualStudio.Shell.Interop;
 using Tvl.VisualStudio.JustMyCodeToggle.Managers;
 using kvp = System.Collections.Generic.KeyValuePair<string, string>;
@@ -38,6 +39,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
         }
         protected readonly string propertyName;
         protected Lazy<ExtensibilitySettingManager> _settingsManager;
+        public Task<IDisposable> WatchSetting<SETTING_TYPE>(Action<SettingValue<SETTING_TYPE>> onChange) => _settingsManager.Value.WatchSetting(propertyName, onChange);
         public ExtensibilitySettingSetter(string propertyName)
         {
             this.propertyName = propertyName;

@@ -6,6 +6,7 @@ using Community.VisualStudio.Toolkit;
 using EnvDTE;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
+using Microsoft.VisualStudio.Extensibility.Settings;
 using Microsoft.VisualStudio.Shell;
 using Tvl.VisualStudio.JustMyCodeToggle.Managers;
 
@@ -67,15 +68,18 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     }
 
     [VisualStudioContribution]
-    internal class FullSymbolLoadExtensibilityBtn : ToggleCommand //  OurExtensibilityToggleButton<FullSymbolLoadCmd>
+    internal class FullSymbolLoadExtensibilityBtn : OurExtensibilityToggleButton<FullSymbolLoadCmd>
     {
-
-        public override Task InitializeAsync(CancellationToken cancellationToken)
+        public FullSymbolLoadExtensibilityBtn(VisualStudioExtensibility extensibility)
         {
-            //JustMyCodeTogglePackage.instance.RegisterService(new ExtensibilitySettingManager(Extensibility));
-            return base.InitializeAsync(cancellationToken);
+            JustMyCodeTogglePackage.instance.RegisterService(new ExtensibilitySettingManager(extensibility));
         }
-        public override CommandConfiguration CommandConfiguration => new("Toggle Full Symbol Loading2")
+        //public override Task InitializeAsync(CancellationToken cancellationToken)
+        //{
+
+        //    return base.InitializeAsync(cancellationToken);
+        //}
+        public override CommandConfiguration CommandConfiguration => new("Toggle Loading All Symbols")
         {
             // Use this object initializer to set optional parameters for the command. The required parameter,
             // displayName, is set above. DisplayName is localized and references an entry in .vsextension\string-resources.json.
@@ -90,21 +94,33 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
             ],
         };
 
-        public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
-        {
-            Debug.WriteLine("DONE WITH IT");
-        }
+
     }
 
     internal class FullSymbolLoadCmd : ToggleSettingDynamicSetterCmd<bool>
     {
         private SettingsStoreSetter<bool> settingStoreSetter;
         private ExtensibilityBoolToValSettingSetter<string> unifiedSetter;
-
+        private IDisposable watched;
         public FullSymbolLoadCmd() : base(true, false)
         {
             this.settingStoreSetter = new("Debugger", "SymbolUseExcludeList");
             this.unifiedSetter = new ExtensibilityBoolToValSettingSetter<string>(@"debugging.symbols.load.moduleFilterMode", "loadAllButExcluded", "loadOnlyIncluded");
+            if (ProjectExtensions.IsVS2026 && ExtensibilitySettingManager.Inited)
+            {
+                watched = this.unifiedSetter.WatchSetting<string>(SettingChanged);
+            }
+            else
+            {
+                setter = settingStoreSetter;
+            }
+        }
+
+        private async void SettingChanged(SettingValue<string> value)
+        {
+            //ISetSettingInterface<bool> setter = this.unifiedSetter;
+            //await this.SetSetting(await setter.GetSetting());
+            await this.SyncCheckedToCurVal();
 
         }
 

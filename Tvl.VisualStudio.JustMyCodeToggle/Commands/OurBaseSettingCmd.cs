@@ -71,13 +71,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     {
         public IOurCommand OurCommand { set; get; }
         public OurExtensibilityToggleButton()
-        {
-            OurCommand = new CMD_CLASS();
-            OurCommand.Native = this;
+        {   
         }
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
+            OurCommand = new CMD_CLASS();
+            OurCommand.Native = this;
             await OurCommand?.Initialize();
             await base.InitializeAsync(cancellationToken);
         }

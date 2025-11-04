@@ -17,23 +17,32 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
             Inited = true;
         }
 
-        public static bool Inited {get; private set;}
+        public static bool Inited { get; private set; }
         public VisualStudioExtensibility Extensibility { get; }
+
 
         public async Task<T> GetSetting<T>(string propertyName)
         {
             SettingIdentifier<T> ident = propertyName;
-            var ret =  await Extensibility.Settings().ReadEffectiveValueAsync<T>(ident, CancellationToken.None);
+
+
+            var ret = await Extensibility.Settings().ReadEffectiveValueAsync<T>(ident, CancellationToken.None);
+
             return ret.Value;
         }
         public async Task SetSetting<T>(string propertyName, T val)
         {
-            SettingIdentifier<T> ident = propertyName;// "debugging.symbols.load.moduleFilterMode";
+            SettingIdentifier<T> ident = propertyName;
             await this.Extensibility.Settings().WriteAsync(batch =>
             {
                 batch.WriteSetting(ident, val);
             }, $"JMC Updating {ident}", CancellationToken.None);
 
+        }
+        public async Task<IDisposable> WatchSetting<T>(string propertyName, Action<SettingValue<T>> onChange)
+        {
+            SettingIdentifier<T> ident = propertyName;
+            return await Extensibility.Settings().SubscribeAsync(ident, default, changeHandler: onChange);
         }
     }
 }

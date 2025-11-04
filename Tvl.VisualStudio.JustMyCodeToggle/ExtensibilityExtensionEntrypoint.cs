@@ -11,10 +11,10 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     [VisualStudioContribution]
     internal class ExtensibilityExtensionEntrypoint : Extension
     {
-   //public ExtensibilityExtensionEntrypoint(){
-            
-   //         Debug.WriteLine("Inited here...");
-   //     }
+        //public ExtensibilityExtensionEntrypoint(){
+
+        //         Debug.WriteLine("Inited here...");
+        //     }
 
         /// <inheritdoc />
         public override ExtensionConfiguration ExtensionConfiguration => new()
@@ -22,20 +22,16 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
             RequiresInProcessHosting = true,
         };
 
-        ///// <inheritdoc />
-        //protected override void InitializeServices(IServiceCollection serviceCollection)
-        //{
-            
-        //    Debug.WriteLine("ExtensionEntrypoint InitializeServices called!");
+        
+        protected override void InitializeServices(IServiceCollection serviceCollection)
+        {
 
-        //    base.InitializeServices(serviceCollection);
+            Debug.WriteLine("ExtensionEntrypoint InitializeServices called!");
             
-        //    // Initialize the symbol load helper immediately during service initialization
-        //    // This happens before any commands are invoked
+            base.InitializeServices(serviceCollection);
+            
 
-            
-            
-        //    // You can configure dependency injection here by adding services to the serviceCollection.
-        //}
+
+        }
     }
 }
