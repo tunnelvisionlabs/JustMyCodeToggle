@@ -11,9 +11,10 @@ using Tvl.VisualStudio.JustMyCodeToggle.Managers;
 using kvp = System.Collections.Generic.KeyValuePair<string, string>;
 namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
 {
-    internal class ExtensibilityBoolToValSettingSetter<SETTING_TYPE> : ExtensibilitySettingSetter<SETTING_TYPE>, ISetSettingInterface<bool>{
-        private SETTING_TYPE trueVal;
-        private SETTING_TYPE falseVal;
+    internal class ExtensibilityBoolToValSettingSetter<SETTING_TYPE> : ExtensibilitySettingSetter<SETTING_TYPE>, ISetSettingInterface<bool>
+    {
+        internal SETTING_TYPE trueVal;
+        internal SETTING_TYPE falseVal;
 
         public ExtensibilityBoolToValSettingSetter(string propertyName, SETTING_TYPE trueVal, SETTING_TYPE falseVal) : base(propertyName)
         {
@@ -32,18 +33,24 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     }
     internal class ExtensibilitySettingSetter<SETTING_TYPE> : ISetSettingInterface<SETTING_TYPE>
     {
-        public Task<SETTING_TYPE> GetSetting() => _settingsManager.Value.GetSetting<SETTING_TYPE>(propertyName);
-        public Task SetSetting(SETTING_TYPE val)
+        public async Task<SETTING_TYPE> GetSetting() {
+            if (! _settingsManager.IsCompleted)
+                return default;
+            return await (await _settingsManager).GetSetting<SETTING_TYPE>(propertyName);
+        }
+        public async Task SetSetting(SETTING_TYPE val)
         {
-            return _settingsManager.Value.SetSetting(propertyName, val);
+            // if settings manager is not ready we silently do nothing,  waiting for it will cause deadlock
+            if (! _settingsManager.IsCompleted)
+                return;
+            await (await _settingsManager).SetSetting(propertyName, val);
         }
         protected readonly string propertyName;
-        protected Lazy<ExtensibilitySettingManager> _settingsManager;
-        public Task<IDisposable> WatchSetting<SETTING_TYPE>(Action<SettingValue<SETTING_TYPE>> onChange) => _settingsManager.Value.WatchSetting(propertyName, onChange);
+        protected Task<ExtensibilitySettingManager> _settingsManager => ExtensibilitySettingManager.Instance;
+        public async Task<IDisposable> WatchSetting<SETTING_TYPE>(Action<SettingValue<SETTING_TYPE>> onChange) => await (await _settingsManager).WatchSetting(propertyName, onChange);
         public ExtensibilitySettingSetter(string propertyName)
         {
             this.propertyName = propertyName;
-            _settingsManager = new(() => JustMyCodeTogglePackage.instance.GetTypedService<ExtensibilitySettingManager>());
         }
     }
     /// <summary>

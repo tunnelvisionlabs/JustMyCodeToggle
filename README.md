@@ -26,8 +26,8 @@ By default, the new command is not bound to a keystroke. A key binding may be ad
 - Debug.JMCDisableJitOptmizations
 
 
-### VS 2026 Issues
-VS 2026 once again has changed things so the 2022 tricks don't all work.   It has largely been fixed except for "All Module Symbol Loading"  for  now in 2026 it will just open the options page to this, until some bugs in Extensibility are fixed.  If you know of a way let me know:)
+### VS 2026 Issues / Changes
+VS 2026 once again has changed things so the 2022 tricks don't all work.  The plus side is there is a new "Unified" settings manager but it is only available to Extensibility extensions.  We now implement both but it still has issues on its own. Most things work except: controlling load all modules will not work until a project is loaded.  It will toggle but the toggle won't do anything.  There is a big plus to unified settings as we can now 'watch' settings for if they change, this is particularly important for just my code and symbol loading as changing the setting in one VS instance instantly changes it in all instances that are open.
 
 
 ### Implementation

@@ -9,17 +9,29 @@ using Microsoft.VisualStudio.Extensibility.Settings;
 
 namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
 {
-    internal class ExtensibilitySettingManager
+    [VisualStudioContribution]
+    public class ExtensibilitySettingManager : IExtensibilitySettingManager
     {
+        [VisualStudioContribution]
+        public static BrokeredServiceConfiguration BrokeredServiceConfiguration
+            => new(IExtensibilitySettingManager.Configuration.ServiceName, IExtensibilitySettingManager.Configuration.ServiceVersion, typeof(ExtensibilitySettingManager))
+            {
+                ServiceAudience = BrokeredServiceAudience.Local,
+                
+            };
+
         public ExtensibilitySettingManager(VisualStudioExtensibility extensibility)
         {
             this.Extensibility = extensibility;
+            tcs.TrySetResult(this);
             Inited = true;
+            //JustMyCodeTogglePackage.instance?.RegisterService(this);
         }
 
         public static bool Inited { get; private set; }
         public VisualStudioExtensibility Extensibility { get; }
-
+        public static Task<ExtensibilitySettingManager> Instance => tcs.Task;
+        private static TaskCompletionSource<ExtensibilitySettingManager> tcs = new();
 
         public async Task<T> GetSetting<T>(string propertyName)
         {
@@ -44,5 +56,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Managers
             SettingIdentifier<T> ident = propertyName;
             return await Extensibility.Settings().SubscribeAsync(ident, default, changeHandler: onChange);
         }
+
+        public Task<VisualStudioExtensibility> GetExtensibility() => Task.FromResult(this.Extensibility);
     }
 }

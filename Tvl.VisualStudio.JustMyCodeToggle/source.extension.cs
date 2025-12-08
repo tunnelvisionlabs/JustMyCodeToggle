@@ -12,7 +12,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         public const string Name = "Just My Code Toggle";
         public const string Description = @"Adds the Just My Code command button to Visual Studio.";
         public const string Language = "en-US";
-        public const string Version = "1.4.5";
+        public const string Version = "1.4.6";
         public const string Author = "Sam Harwell";
         public const string Tags = "debugging, just my code";
         public const bool IsPreview = false;

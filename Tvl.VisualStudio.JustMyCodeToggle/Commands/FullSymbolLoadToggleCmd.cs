@@ -1,13 +1,8 @@
 using System;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Community.VisualStudio.Toolkit;
 using EnvDTE;
-using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
-using Microsoft.VisualStudio.Extensibility.Settings;
-using Microsoft.VisualStudio.Shell;
 using Tvl.VisualStudio.JustMyCodeToggle.Managers;
 
 namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
@@ -31,69 +26,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     [Command(PackageGuids.guidJustMyCodeTogglePackageCmdSetString, PackageIds.JMCSymbolLoadBtn)]
     internal class FullSymbolLoadBtn : OurOLEButton<FullSymbolLoadCmd, FullSymbolLoadBtn>
     {
-
-        protected override void BeforeQueryStatus(EventArgs e)
-        {
-            var useCmd = !ProjectExtensions.IsVS2026;
-            useCmd = true;
-
-            this.Command.Visible = useCmd;
-
-            //this.Command.Visible = true;
-
-            //this.Command.Enabled = useCmd;
-            //this.Command.Supported = useCmd;
-
-
-            //this.Command.Enabled = useCmd;
-            //this.Command.Supported = useCmd;
-
-            base.BeforeQueryStatus(e);
-        }
-        protected override Task InitializeCompletedAsync()
-        {
-
-            return base.InitializeCompletedAsync(); ;
-        }
-
         protected DteManager dteManager;
-        protected override async Task ExecuteAsync(OleMenuCmdEventArgs e)
-        {
-            dteManager ??= JustMyCodeTogglePackage.instance.GetTypedService<DteManager>();
-            await dteManager.ExecuteCommandAsync("Tools.Options", "Debugging.Symbols");
-
-
-            //return base.ExecuteAsync(e);
-        }
-    }
-
-    [VisualStudioContribution]
-    internal class FullSymbolLoadExtensibilityBtn : OurExtensibilityToggleButton<FullSymbolLoadCmd>
-    {
-        public FullSymbolLoadExtensibilityBtn(VisualStudioExtensibility extensibility)
-        {
-            JustMyCodeTogglePackage.instance.RegisterService(new ExtensibilitySettingManager(extensibility));
-        }
-        //public override Task InitializeAsync(CancellationToken cancellationToken)
-        //{
-
-        //    return base.InitializeAsync(cancellationToken);
-        //}
-        public override CommandConfiguration CommandConfiguration => new("Toggle Loading All Symbols")
-        {
-            // Use this object initializer to set optional parameters for the command. The required parameter,
-            // displayName, is set above. DisplayName is localized and references an entry in .vsextension\string-resources.json.
-            Icon = new(ImageMoniker.KnownValues.Extension, IconSettings.IconAndText),
-            Flags = CommandFlags.CanToggle,
-
-            //VsctCommandMapping = new VsctId(new(PackageGuids.guidJustMyCodeTogglePackageCmdSetString),PackageIds.JMCSymbolLoadBtn),
-            Placements = [
-            CommandPlacement.KnownPlacements.ExtensionsMenu,
-                //CommandPlacement.VsctParent(new(PackageGuids.guidJustMyCodeTogglePackageCmdSetString),PackageIds.JMCToolbarGroup, priority: 0x124),
-
-            ],
-        };
-
 
     }
 
@@ -101,32 +34,31 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
     {
         private SettingsStoreSetter<bool> settingStoreSetter;
         private ExtensibilityBoolToValSettingSetter<string> unifiedSetter;
-        private IDisposable watched;
+        private Task<IDisposable> watched;
         public FullSymbolLoadCmd() : base(true, false)
         {
             this.settingStoreSetter = new("Debugger", "SymbolUseExcludeList");
             this.unifiedSetter = new ExtensibilityBoolToValSettingSetter<string>(@"debugging.symbols.load.moduleFilterMode", "loadAllButExcluded", "loadOnlyIncluded");
-            if (ProjectExtensions.IsVS2026 && ExtensibilitySettingManager.Inited)
+            if (ProjectExtensions.IsVS2026)
             {
-                watched = this.unifiedSetter.WatchSetting<string>(SettingChanged);
+                watched = this.unifiedSetter.WatchSetting<string>( (sv) => this.SetCheckedToMatch(sv.Value == this.unifiedSetter.trueVal) );
             }
             else
             {
                 setter = settingStoreSetter;
             }
+            SetUsOnUnifiedSetterReady();
         }
 
-        private async void SettingChanged(SettingValue<string> value)
+        private async void SetUsOnUnifiedSetterReady()
         {
-            //ISetSettingInterface<bool> setter = this.unifiedSetter;
-            //await this.SetSetting(await setter.GetSetting());
-            await this.SyncCheckedToCurVal();
-
+            await watched;
+            await SyncCheckedToCurVal();
         }
 
         protected override Task<ISetSettingInterface<bool>[]> GetSetters()
         {
-            ISetSettingInterface<bool> setter = ProjectExtensions.IsVS2026 && ExtensibilitySettingManager.Inited ? unifiedSetter : settingStoreSetter;
+            ISetSettingInterface<bool> setter = ProjectExtensions.IsVS2026 ? unifiedSetter : settingStoreSetter;
             return Task.FromResult<ISetSettingInterface<bool>[]>([setter]);
         }
     }
