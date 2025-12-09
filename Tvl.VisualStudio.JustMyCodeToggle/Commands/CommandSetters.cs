@@ -28,7 +28,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Commands
 
         async Task<bool> ISetSettingInterface<bool>.GetSetting()
         {
-            return (await this.GetSetting()).Equals(trueVal);
+            return EqualityComparer<SETTING_TYPE>.Default.Equals(await this.GetSetting(),trueVal);
         }
     }
     internal class ExtensibilitySettingSetter<SETTING_TYPE> : ISetSettingInterface<SETTING_TYPE>
