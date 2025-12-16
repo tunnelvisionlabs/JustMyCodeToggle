@@ -1,94 +1,110 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project>
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net480</TargetFramework>
 
-  <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<Description>Adds the Just My Code command button to Visual Studio.</Description>
+		<Company>Tunnel Vision Laboratories, LLC</Company>
+		<Copyright>Copyright © Sam Harwell 2017</Copyright>
+		<Version>1.4.6.0</Version>
+		<LangVersion>preview</LangVersion>
+		<FileVersion>1.4.6.0</FileVersion>
+		<InformationalVersion>1.4.6-dev</InformationalVersion>
+		<GeneratePkgDefFile>true</GeneratePkgDefFile>
+		<UseCodebase>true</UseCodebase>
+		<IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+		<IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+		<IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
+		<CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
+		<CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
+		<BaseIntermediateOutputPath>obj</BaseIntermediateOutputPath>
+		<IntermediateOutputPath>obj/int</IntermediateOutputPath>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<Configurations>Debug;Release</Configurations>
+        <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
+	</PropertyGroup>
+	<PropertyGroup>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugType>pdbonly</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+		<!-- This property disables extension deployment for command line builds; required for AppVeyor -->
+		<DeployExtension>False</DeployExtension>
 
-    <Description>Adds the Just My Code command button to Visual Studio.</Description>
-    <Company>Tunnel Vision Laboratories, LLC</Company>
-    <Copyright>Copyright © Sam Harwell 2017</Copyright>
-    <Version>1.3.0.0</Version>
-    <FileVersion>1.3.0.0</FileVersion>
-    <InformationalVersion>1.3.0-dev</InformationalVersion>
+		<!-- Ideally this is always enabled, but that tends to hurt developer productivity -->
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="CI.Microsoft.VisualStudio.ProjectSystem.Managed" Version="17.12.42" />
+		<PackageReference Include="Microsoft.Build" Version="17.14.28" />
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility" Version="17.14.2098" />
 
-    <GeneratePkgDefFile>true</GeneratePkgDefFile>
-    <UseCodebase>true</UseCodebase>
-    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
-    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
-    <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
-    <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
-
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>SharedKey.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
-    <!-- This property disables extension deployment for command line builds; required for AppVeyor -->
-    <DeployExtension>False</DeployExtension>
-
-    <!-- Ideally this is always enabled, but that tends to hurt developer productivity -->
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <!-- StyleCop Analyzers configuration -->
-  <PropertyGroup>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json" />
-    <None Include="$(CodeAnalysisRuleSet)" Condition="'$(CodeAnalysisRuleSet)' != ''" Link="%(Filename)%(Extension)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.1.192" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.14.0" Version="14.0.23205" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="10.0.30319" />
-    <PackageReference Include="EnvDTE" Version="8.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
-    <None Include="source.extension.vsixmanifest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\LICENSE.txt">
-      <Link>LICENSE.txt</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <VSCTCompile Include="JustMyCodeToggle.vsct">
-      <ResourceName>1000</ResourceName>
-      <SubType>Designer</SubType>
-    </VSCTCompile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="VSPackage.resx">
-      <LogicalName>VSPackage.resources</LogicalName>
-      <MergeWithCTO>true</MergeWithCTO>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
-
+		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem" Version="17.9.380" />
+		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Query" Version="17.14.145" />
+		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.SDK" Version="17.9.380" />
+        <PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40608" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40608" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.14.40265" ExcludeAssets="runtime" />        
+		<PackageReference Include="Microsoft.VisualStudio.ProjectSystem.Sdk.Tools" Version="17.9.380">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Community.VisualStudio.Toolkit.17" Version="17.0.545" ExcludeAssets="Runtime">
+			<IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="MessagePack" Version="3.1.4" />
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)..\stylecop.json" Link="stylecop.json" />
+		<None Include="$(CodeAnalysisRuleSet)" Condition="'$(CodeAnalysisRuleSet)' != ''" Link="%(Filename)%(Extension)" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Community.VisualStudio.VSCT" Version="16.0.29.6" PrivateAssets="all" />		
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
+		<None Include="source.extension.vsixmanifest">
+			<SubType>Designer</SubType>
+			<Generator>VsixManifestGenerator</Generator>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="..\LICENSE.txt">
+			<Link>LICENSE.txt</Link>
+			<IncludeInVSIX>true</IncludeInVSIX>
+		</Content>
+		<EmbeddedResource Include="source.extension.vsixmanifest">
+			<Generator>VsixManifestGenerator</Generator>
+			<LastGenOutput>source.extension.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+        <Content Include="JustMyCodeToggle.vsct">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <IncludeInVSIX>true</IncludeInVSIX>
+        </Content>
+        <VSCTCompile Include="JustMyCodeToggle.vsct">
+            <ResourceName>Menus.ctmenu</ResourceName>
+        </VSCTCompile>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="source.extension.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+	<Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets')" />
+	<PropertyGroup>
+		<GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);IncludeNuGetResolvedAssets</GetVsixSourceItemsDependsOn>
+	</PropertyGroup>
+	<Target Name="IncludeNuGetResolvedAssets" AfterTargets="GetVsixSourceItems">
+		<ItemGroup>
+			<VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" />
+		</ItemGroup>
+	</Target>
 </Project>

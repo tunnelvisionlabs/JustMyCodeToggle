@@ -1,16 +1,64 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
   <Extern href="VsDbgCmd.h" />
   <Extern href="vsdebugguids.h" />
   <Extern href="vsshlids.h" />
+  <Include href="VSGlobals.vsct" />
   <Include href="KnownImageIds.vsct"/>
-
   <Commands package="guidJustMyCodeTogglePackage">
+    <Groups>
+      <Group guid="guidJustMyCodeTogglePackageCmdSet" id="JMCToolbarGroup" priority="0x001">
+        <Parent guid="guidJustMyCodeTogglePackageCmdSet" id="JMCMenuController" />
+      </Group>
+    </Groups>
+    <Menus>
+      <Menu guid="guidJustMyCodeTogglePackageCmdSet" id="JMCMenuController" priority="0x0100" type="MenuControllerLatched">
+        <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
+        <CommandFlag>TextIsAnchorCommand</CommandFlag>
+        <Strings>
+          <CanonicalName>Debug.JMCTogglePackageMenu</CanonicalName>
+          <ButtonText />
+        </Strings>
+      </Menu>
+    </Menus>
     <Buttons>
-      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0000" type="Button">
-        <Icon guid="ImageCatalogGuid" id="JustMyCode" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
+
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="JMCNativeCodeBtn" priority="0x0101" type="Button">
+        <Parent guid="guidJustMyCodeTogglePackageCmdSet" id="JMCToolbarGroup" />
+        <CommandFlag>TogglePatternAvailable</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <Icon guid="ImageCatalogGuid" id="CPPFileNode" />
+
+        <Strings>
+          <CommandName>Debug.JMCNativeCodeDebugging</CommandName>
+          <LocCanonicalName>Debug.JMCNativeCodeDebugging</LocCanonicalName>
+
+          <ButtonText>Native Code Debugging</ButtonText>
+          <ToolTipText>Toggle Native Code debugging for corrent launch option</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="JMCSymbolLoadBtn" priority="0x0102" type="Button">
+        <Parent guid="guidJustMyCodeTogglePackageCmdSet" id="JMCToolbarGroup" />
+        <CommandFlag>TogglePatternAvailable</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Icon guid="ImageCatalogGuid" id="FindSymbol" />
+
+        <Strings>
+          <CommandName>Debug.JMCSymbolLocalToggle</CommandName>
+          <LocCanonicalName>Debug.JMCSymbolLocalToggle</LocCanonicalName>
+
+          <ButtonText>Load All Symbols (vs Auto Select)</ButtonText>
+          <ToolTipText>Toggle Native Code debugging for corrent launch option</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="JMCJustMyCodeBtn" priority="0x099" type="Button">
+        <Parent guid="guidJustMyCodeTogglePackageCmdSet" id="JMCToolbarGroup" />
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>FixMenuController</CommandFlag>
+        <CommandFlag>TogglePatternAvailable</CommandFlag>
+        <!--<CommandFlag>DontCache</CommandFlag>-->
+        <Icon guid="ImageCatalogGuid" id="JustMyCode" />
         <Strings>
           <ButtonText>Just My Code</ButtonText>
           <ToolTipText>Toggle the Just My Code debugger option</ToolTipText>
@@ -19,26 +67,49 @@
           <LocCanonicalName>Debug.JustMyCodeToggle</LocCanonicalName>
         </Strings>
       </Button>
+
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="JMCDisableJitOptmizationsBtn" priority="0x0105" type="Button">
+        <Parent guid="guidJustMyCodeTogglePackageCmdSet" id="JMCToolbarGroup" />
+        <CommandFlag>TogglePatternAvailable</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Icon guid="ImageCatalogGuid" id="Binary" />
+
+        <Strings>
+          <CommandName>Debug.JMCDisableJitOptmizations</CommandName>
+          <LocCanonicalName>Debug.JMCDisableJitOptmizations</LocCanonicalName>
+
+          <ButtonText>Disable Jit Optimizations</ButtonText>
+          <ToolTipText>Disable Managed JIT Optimizations / precompiled files for external dlls/executables (helps with variable optimization). Beware it does prevent Just My Code when checked. This is done by launch profile env vars as that option is not findable in settings.</ToolTipText>
+        </Strings>
+      </Button>
+
     </Buttons>
   </Commands>
 
   <CommandPlacements>
     <!-- In the call stack context menu, above "Show External Code" -->
-    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x03E0">
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="JMCJustMyCodeBtn" priority="0x03E0">
       <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_OPTIONS"/>
     </CommandPlacement>
 
     <!-- In the Debug toolbar, after "Show Threads in Source" -->
-    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0320">
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="JMCMenuController" priority="0x0320">
       <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_TOOLBAR_WATCH"/>
     </CommandPlacement>
   </CommandPlacements>
 
   <Symbols>
-    <GuidSymbol name="guidJustMyCodeTogglePackage" value="{73702199-D0C5-4863-8203-99D41B34DD2D}" />
 
-    <GuidSymbol name="guidJustMyCodeTogglePackageCmdSet" value="{B1317E30-CFDA-47CA-90A0-95E894B150A0}">
-      <IDSymbol name="cmdidJustMyCodeToggle" value="0x0100" />
+    <GuidSymbol name="guidJustMyCodeTogglePackage" value="{c86c0c68-5ff5-43af-8a60-54540cbea3e2}" />
+
+
+    <GuidSymbol name="guidJustMyCodeTogglePackageCmdSet" value="{4e7a4be2-f4dd-4cc1-a142-e23645e43ecd}">
+      <IDSymbol name="JMCToolbarGroup" value="0x1101" />
+      <IDSymbol name="JMCMenuController" value="0x1102"/>
+      <IDSymbol name="JMCNativeCodeBtn" value="0x1103"/>
+      <IDSymbol name="JMCJustMyCodeBtn" value="0x1104"/>
+      <IDSymbol name="JMCSymbolLoadBtn" value="0x1105"/>
+      <IDSymbol name="JMCDisableJitOptmizationsBtn" value="0x1107"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>
