@@ -22,6 +22,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
     [InstalledProductRegistration(Vsix.Name, Vsix.Description, Vsix.Version)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideBrokeredServiceHubService(IExtensibilitySettingManager.Configuration.ServiceName, Audience = ServiceAudience.Local | ServiceAudience.RemoteExclusiveClient)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     internal class JustMyCodeTogglePackage : ToolkitPackage
     {
