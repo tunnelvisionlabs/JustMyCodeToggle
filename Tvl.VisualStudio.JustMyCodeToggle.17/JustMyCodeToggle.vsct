@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+  <Extern href="VsDbgCmd.h" />
+  <Extern href="vsdebugguids.h" />
+  <Extern href="vsshlids.h" />
+  <Include href="KnownImageIds.vsct"/>
+
+  <Commands package="guidJustMyCodeTogglePackage">
+    <Buttons>
+      <Button guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0000" type="Button">
+        <Icon guid="ImageCatalogGuid" id="JustMyCode" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Just My Code</ButtonText>
+          <ToolTipText>Toggle the Just My Code debugger option</ToolTipText>
+          <CommandName>Debug.JustMyCodeToggle</CommandName>
+          <CanonicalName>Debug.JustMyCodeToggle</CanonicalName>
+          <LocCanonicalName>Debug.JustMyCodeToggle</LocCanonicalName>
+        </Strings>
+      </Button>
+    </Buttons>
+  </Commands>
+
+  <CommandPlacements>
+    <!-- In the call stack context menu, above "Show External Code" -->
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x03E0">
+      <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_OPTIONS"/>
+    </CommandPlacement>
+
+    <!-- In the Debug toolbar, after "Show Threads in Source" -->
+    <CommandPlacement guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0320">
+      <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_TOOLBAR_WATCH"/>
+    </CommandPlacement>
+  </CommandPlacements>
+
+  <Symbols>
+    <GuidSymbol name="guidJustMyCodeTogglePackage" value="{79B6220F-7F5A-4ECE-B5C4-2CA3D7D5FA36}" />
+
+    <GuidSymbol name="guidJustMyCodeTogglePackageCmdSet" value="{B1317E30-CFDA-47CA-90A0-95E894B150A0}">
+      <IDSymbol name="cmdidJustMyCodeToggle" value="0x0100" />
+    </GuidSymbol>
+  </Symbols>
+</CommandTable>

@@ -34,6 +34,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         {
             get
             {
+                ThreadHelper.ThrowIfNotOnUIThread();
                 return GetService(typeof(EnvDTE._DTE)) as EnvDTE.DTE;
             }
         }
@@ -51,6 +52,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
         private void HandleInvokeJustMyCodeToggle(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             try
             {
                 EnvDTE.Property enableJustMyCode = ApplicationObject.get_Properties("Debugging", "General").Item("EnableJustMyCode");
@@ -70,6 +73,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
         private void HandleBeforeQueryStatusJustMyCodeToggle(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             try
             {
                 _command.Supported = true;

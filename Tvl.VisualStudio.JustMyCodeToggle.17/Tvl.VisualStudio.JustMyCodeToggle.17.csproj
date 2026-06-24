@@ -3,7 +3,8 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>Tvl.VisualStudio.JustMyCodeToggle</RootNamespace>
 
     <Description>Adds the Just My Code command button to Visual Studio.</Description>
     <Company>Tunnel Vision Laboratories, LLC</Company>
@@ -22,14 +23,11 @@
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
 
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>SharedKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Tvl.VisualStudio.JustMyCodeToggle\SharedKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
-    <!-- This property disables extension deployment for command line builds; required for AppVeyor -->
-    <DeployExtension>False</DeployExtension>
-
-    <!-- Ideally this is always enabled, but that tends to hurt developer productivity -->
+    <DeployExtension>false</DeployExtension>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -43,7 +41,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <!-- StyleCop Analyzers configuration -->
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
@@ -56,22 +53,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.1.192" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.14.0" Version="14.0.23205" />
-    <PackageReference Include="Microsoft.VisualStudio.Shell.Interop.10.0" Version="10.0.30319" />
-    <PackageReference Include="EnvDTE" Version="8.0.1" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5234" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.31902.203" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
-    <None Include="source.extension.vsixmanifest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\LICENSE.txt">
-      <Link>LICENSE.txt</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\JustMyCodeTogglePackage.cs" Link="JustMyCodeTogglePackage.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\Properties\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    <None Include="$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -82,7 +71,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="VSPackage.resx">
+    <EmbeddedResource Include="..\Tvl.VisualStudio.JustMyCodeToggle\VSPackage.resx" Link="VSPackage.resx">
       <LogicalName>VSPackage.resources</LogicalName>
       <MergeWithCTO>true</MergeWithCTO>
     </EmbeddedResource>
