@@ -62,7 +62,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.Shared\JustMyCodeToggleConstants.cs" Link="Shared\JustMyCodeToggleConstants.cs" />
     <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
     <None Include="Tvl.VisualStudio.JustMyCodeToggle.pkgdef" />
     <None Include="source.extension.vsixmanifest" />
@@ -76,8 +75,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <VSCTIncludePath Include="$(MSBuildThisFileDirectory)" />
-    <VSCTCompile Include="..\Tvl.VisualStudio.JustMyCodeToggle.Shared\JustMyCodeToggle.vsct" Link="JustMyCodeToggle.vsct">
+    <VSCTCompile Include="JustMyCodeToggle.vsct">
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
