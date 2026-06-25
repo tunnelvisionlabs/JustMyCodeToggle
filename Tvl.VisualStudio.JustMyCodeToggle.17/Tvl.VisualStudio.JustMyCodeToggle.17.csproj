@@ -64,7 +64,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <VSCTCompile Include="JustMyCodeToggle.vsct">
+    <VSCTIncludePath Include="$(MSBuildThisFileDirectory)" />
+    <VSCTCompile Include="..\Tvl.VisualStudio.JustMyCodeToggle.Shared\JustMyCodeToggle.vsct" Link="JustMyCodeToggle.vsct">
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
