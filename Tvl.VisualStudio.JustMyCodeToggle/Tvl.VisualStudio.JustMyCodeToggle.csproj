@@ -13,7 +13,7 @@
     <InformationalVersion>1.3.0-dev</InformationalVersion>
 
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
-    <CreateVsixContainer>false</CreateVsixContainer>
+    <CreateVsixContainer>true</CreateVsixContainer>
     <UseCodebase>true</UseCodebase>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
@@ -56,20 +56,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.1.192" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5234" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6070" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.Interop" Version="7.10.6071" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
-    <None Include="Tvl.VisualStudio.JustMyCodeToggle.pkgdef" />
     <None Include="source.extension.vsixmanifest" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\LICENSE.txt">
       <Link>LICENSE.txt</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Tvl.VisualStudio.JustMyCodeToggle.pkgdef">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
