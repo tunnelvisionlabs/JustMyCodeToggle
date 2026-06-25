@@ -63,6 +63,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.Shared\JustMyCodeToggleConstants.cs" Link="Shared\JustMyCodeToggleConstants.cs" />
     <None Include="$(MSBuildProjectFileDirectory)$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
     <None Include="source.extension.vsixmanifest" />
   </ItemGroup>

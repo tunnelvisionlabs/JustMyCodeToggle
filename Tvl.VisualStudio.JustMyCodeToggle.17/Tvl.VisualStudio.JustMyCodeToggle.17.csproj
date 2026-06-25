@@ -27,7 +27,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <!-- This property disables extension deployment for command line builds; required for AppVeyor -->
     <DeployExtension>false</DeployExtension>
+
+    <!-- Ideally this is always enabled, but that tends to hurt developer productivity -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -41,6 +44,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <!-- StyleCop Analyzers configuration -->
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)..\JustMyCodeToggle.ruleset</CodeAnalysisRuleSet>
@@ -58,6 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.Shared\JustMyCodeToggleConstants.cs" Link="Shared\JustMyCodeToggleConstants.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\JustMyCodeTogglePackage.cs" Link="JustMyCodeTogglePackage.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\Properties\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     <None Include="$(AssemblyOriginatorKeyFile)" Link="%(Filename)%(Extension)" />
