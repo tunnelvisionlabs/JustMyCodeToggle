@@ -32,11 +32,14 @@
       <Link>LICENSE.txt</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="..\Tvl.VisualStudio.JustMyCodeToggle\Tvl.VisualStudio.JustMyCodeToggle.pkgdef">
+      <Link>Tvl.VisualStudio.JustMyCodeToggle.pkgdef</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tvl.VisualStudio.JustMyCodeToggle\Tvl.VisualStudio.JustMyCodeToggle.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="true" IncludeOutputGroupsInVSIX="BuiltProjectOutputGroup;PkgdefProjectOutputGroup" />
-    <ProjectReference Include="..\Tvl.VisualStudio.JustMyCodeToggle.17\Tvl.VisualStudio.JustMyCodeToggle.17.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="true" IncludeOutputGroupsInVSIX="BuiltProjectOutputGroup;PkgdefProjectOutputGroup" />
+    <ProjectReference Include="..\Tvl.VisualStudio.JustMyCodeToggle\Tvl.VisualStudio.JustMyCodeToggle.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="true" IncludeOutputGroupsInVSIX="BuiltProjectOutputGroup" />
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />

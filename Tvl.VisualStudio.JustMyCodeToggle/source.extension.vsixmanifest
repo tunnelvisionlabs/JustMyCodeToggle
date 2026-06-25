@@ -23,7 +23,6 @@
     <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
   </Prerequisites>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="Tvl.VisualStudio.JustMyCodeToggle" Path="|Tvl.VisualStudio.JustMyCodeToggle;PkgdefProjectOutputGroup|" />
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="Tvl.VisualStudio.JustMyCodeToggle.17" Path="|Tvl.VisualStudio.JustMyCodeToggle.17;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Tvl.VisualStudio.JustMyCodeToggle.pkgdef" />
   </Assets>
 </PackageManifest>
