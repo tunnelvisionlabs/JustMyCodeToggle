@@ -27,8 +27,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         private static readonly Guid IidIUnknown = new Guid("00000000-0000-0000-C000-000000000046");
 
         private OleServiceProvider _serviceProvider;
-        private IVsRegisterPriorityCommandTarget _registerPriorityCommandTarget;
-        private uint _priorityCommandTargetCookie;
 
         private object ApplicationObject
         {
@@ -41,7 +39,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         public int SetSite(OleServiceProvider psp)
         {
             _serviceProvider = psp;
-            RegisterCommandTarget();
             return SOk;
         }
 
@@ -53,7 +50,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
         public int Close()
         {
-            UnregisterCommandTarget();
             _serviceProvider = null;
             return SOk;
         }
@@ -231,56 +227,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
                 "Item",
                 BindingFlags.GetProperty | BindingFlags.InvokeMethod,
                 "EnableJustMyCode");
-        }
-
-        private void RegisterCommandTarget()
-        {
-            if (_priorityCommandTargetCookie != 0)
-            {
-                return;
-            }
-
-            try
-            {
-                IVsRegisterPriorityCommandTarget registrar =
-                    QueryService<IVsRegisterPriorityCommandTarget>(typeof(SVsRegisterPriorityCommandTarget).GUID);
-                if (registrar == null)
-                {
-                    return;
-                }
-
-                int hr = registrar.RegisterPriorityCommandTarget(0, this, out uint cookie);
-                if (!IsFailure(hr) && cookie != 0)
-                {
-                    _registerPriorityCommandTarget = registrar;
-                    _priorityCommandTargetCookie = cookie;
-                }
-            }
-            catch (Exception ex) when (!IsCriticalException(ex))
-            {
-            }
-        }
-
-        private void UnregisterCommandTarget()
-        {
-            uint cookie = _priorityCommandTargetCookie;
-            IVsRegisterPriorityCommandTarget registrar = _registerPriorityCommandTarget;
-
-            _priorityCommandTargetCookie = 0;
-            _registerPriorityCommandTarget = null;
-
-            if (cookie == 0 || registrar == null)
-            {
-                return;
-            }
-
-            try
-            {
-                registrar.UnregisterPriorityCommandTarget(cookie);
-            }
-            catch (Exception ex) when (!IsCriticalException(ex))
-            {
-            }
         }
 
         private void UpdateCommandUI()
