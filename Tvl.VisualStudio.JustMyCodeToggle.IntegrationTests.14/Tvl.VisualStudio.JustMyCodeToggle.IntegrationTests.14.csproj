@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Extensibility.Testing.Xunit.Legacy" Version="0.1.71-beta" />
+    <PackageReference Include="Microsoft.VisualStudio.Extensibility.Testing.Xunit.Legacy" Version="0.1.783-beta" />
     <PackageReference Include="VSSDK.DTE.8" Version="8.0.4" />
     <PackageReference Include="VSSDK.Shell.11" Version="11.0.4" />
     <PackageReference Include="xunit" Version="2.4.1" />
