@@ -3,6 +3,10 @@
 "InprocServer32"="$WinDir$\SYSTEM32\MSCOREE.DLL"
 "Class"="Tvl.VisualStudio.JustMyCodeToggle.JustMyCodeTogglePackage"
 "CodeBase"="$PackageFolder$\Tvl.VisualStudio.JustMyCodeToggle.dll"
+"AllowsBackgroundLoad"=dword:00000001
+
+[$RootKey$\AutoLoadPackages\{10534154-102d-46e2-aba8-a6bfa25ba0be}]
+"{73702199-d0c5-4863-8203-99d41b34dd2d}"=dword:00000002
 
 [$RootKey$\Menus]
-"{73702199-d0c5-4863-8203-99d41b34dd2d}"=", 1000, 1"
+"{73702199-d0c5-4863-8203-99d41b34dd2d}"=", 1000, 3"

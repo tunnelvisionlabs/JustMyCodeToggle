@@ -3,18 +3,28 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
     <Description>Just My Code Toggle extension for Visual Studio 2022+ integration tests</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\JustMyCodeToggleConstants.cs" Link="JustMyCodeToggleConstants.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIntegrationTest.cs" Link="JustMyCodeToggleIntegrationTest.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Extensibility.Testing.Xunit" Version="0.1.783-beta" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator" Version="0.1.800-beta" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Extensibility.Testing.Xunit" Version="0.1.800-beta" />
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.31902.203" PrivateAssets="all" />
+    <PackageReference Include="Nullable" Version="1.3.1" PrivateAssets="all" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1" PrivateAssets="all" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" PrivateAssets="all" />
