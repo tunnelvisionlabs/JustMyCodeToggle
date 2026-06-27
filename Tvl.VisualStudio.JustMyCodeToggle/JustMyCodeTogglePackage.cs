@@ -4,13 +4,13 @@
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
-    using System.Globalization;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.OLE.Interop;
     using Microsoft.VisualStudio.Shell.Interop;
+    using Tvl.VisualStudio.JustMyCodeToggle.Lightup;
     using OleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
     [ComVisible(true)]
@@ -31,11 +31,11 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         private OleServiceProvider _serviceProvider;
         private object _asyncServiceProvider;
 
-        private object ApplicationObject
+        private DteApplicationWrapper ApplicationObject
         {
             get
             {
-                return QueryService(DteServiceGuid, IidIUnknown);
+                return DteApplicationWrapper.FromObject(QueryService(DteServiceGuid, IidIUnknown));
             }
         }
 
@@ -299,17 +299,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
             return IsFailure(hr) ? null : service;
         }
 
-        private static object InvokeComMember(object instance, string memberName, BindingFlags flags, params object[] arguments)
-        {
-            return instance.GetType().InvokeMember(
-                memberName,
-                BindingFlags.Instance | BindingFlags.Public | flags,
-                null,
-                instance,
-                arguments,
-                CultureInfo.InvariantCulture);
-        }
-
         private static bool TryGetBooleanValue(object value, out bool result)
         {
             if (value is bool boolValue)
@@ -334,10 +323,10 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
 
             try
             {
-                object enableJustMyCode = GetJustMyCodeProperty();
-                if (enableJustMyCode != null)
+                DtePropertyWrapper enableJustMyCode = GetJustMyCodeProperty();
+                if (!enableJustMyCode.IsDefault)
                 {
-                    object value = InvokeComMember(enableJustMyCode, "Value", BindingFlags.GetProperty);
+                    object value = enableJustMyCode.Value;
                     return TryGetBooleanValue(value, out enabled);
                 }
             }
@@ -352,13 +341,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         {
             try
             {
-                object enableJustMyCode = GetJustMyCodeProperty();
-                if (enableJustMyCode != null)
+                DtePropertyWrapper enableJustMyCode = GetJustMyCodeProperty();
+                if (!enableJustMyCode.IsDefault)
                 {
-                    object value = InvokeComMember(enableJustMyCode, "Value", BindingFlags.GetProperty);
+                    object value = enableJustMyCode.Value;
                     if (TryGetBooleanValue(value, out bool enabled))
                     {
-                        InvokeComMember(enableJustMyCode, "Value", BindingFlags.SetProperty, !enabled);
+                        enableJustMyCode.Value = !enabled;
                         UpdateCommandUI();
                         return true;
                     }
@@ -371,26 +360,21 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
             return false;
         }
 
-        private object GetJustMyCodeProperty()
+        private DtePropertyWrapper GetJustMyCodeProperty()
         {
-            object applicationObject = ApplicationObject;
-            if (applicationObject == null)
+            DteApplicationWrapper applicationObject = ApplicationObject;
+            if (applicationObject.IsDefault)
             {
-                return null;
+                return default(DtePropertyWrapper);
             }
 
-            object properties = InvokeComMember(
-                applicationObject,
-                "Properties",
-                BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                "Debugging",
-                "General");
+            DtePropertiesWrapper properties = applicationObject.get_Properties("Debugging", "General");
+            if (properties.IsDefault)
+            {
+                return default(DtePropertyWrapper);
+            }
 
-            return InvokeComMember(
-                properties,
-                "Item",
-                BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                "EnableJustMyCode");
+            return properties.Item("EnableJustMyCode");
         }
 
         private void UpdateCommandUI()
