@@ -25,9 +25,8 @@ test_script:
     $testResultsFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.log"
     New-Item -ItemType Directory -Force -Path $testResultsDirectory | Out-Null
 
-    $testOutput = & $xunitConsole $integrationTestAssembly -noshadow -noautoreporters -verbose 2>&1
+    & $xunitConsole $integrationTestAssembly -noshadow -noautoreporters -verbose 2>&1 | Tee-Object -FilePath $testResultsFile
     $testExitCode = $LastExitCode
-    $testOutput | Tee-Object -FilePath $testResultsFile
 
     if ($testExitCode -ne 0) { $host.SetShouldExit($testExitCode) }
 artifacts:
