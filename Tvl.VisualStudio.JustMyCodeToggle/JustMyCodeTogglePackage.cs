@@ -4,10 +4,8 @@
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
-    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.VisualStudio.OLE.Interop;
     using Microsoft.VisualStudio.Shell.Interop;
     using Tvl.VisualStudio.JustMyCodeToggle.Lightup;
@@ -29,7 +27,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         private static readonly Guid IidIUnknown = new Guid("00000000-0000-0000-C000-000000000046");
 
         private OleServiceProvider _serviceProvider;
-        private object _asyncServiceProvider;
 
         private DteApplicationWrapper ApplicationObject
         {
@@ -53,8 +50,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         {
             ppTask = null;
 
-            _asyncServiceProvider = pServiceProvider;
-
             return SOk;
         }
 
@@ -67,7 +62,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         public int Close()
         {
             _serviceProvider = null;
-            _asyncServiceProvider = null;
             return SOk;
         }
 
@@ -150,153 +144,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
         private static bool IsFailure(int hr)
         {
             return hr < 0;
-        }
-
-        private static object GetAsyncQueryResult(object asyncQueryResult)
-        {
-            if (asyncQueryResult == null)
-            {
-                return null;
-            }
-
-            IVsTask vsTask = asyncQueryResult as IVsTask;
-            if (vsTask != null)
-            {
-                int hr = vsTask.GetResult(out object service);
-                return IsFailure(hr) ? null : service;
-            }
-
-            Task task = asyncQueryResult as Task;
-            if (task != null)
-            {
-                task.GetAwaiter().GetResult();
-
-                PropertyInfo resultProperty = task.GetType().GetProperty("Result");
-                return resultProperty?.GetValue(task, null);
-            }
-
-            if (TryGetVsTaskResult(asyncQueryResult, out object result))
-            {
-                return result;
-            }
-
-            return asyncQueryResult;
-        }
-
-        private static bool TryGetVsTaskResult(object asyncQueryResult, out object result)
-        {
-            result = null;
-
-            MethodInfo[] methods = asyncQueryResult.GetType().GetMethods(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (MethodInfo method in methods)
-            {
-                if (method.Name != "GetResult"
-                    && !method.Name.EndsWith(".GetResult", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length != 1 || !parameters[0].ParameterType.IsByRef)
-                {
-                    continue;
-                }
-
-                object[] arguments = new object[1];
-                object returnValue = method.Invoke(asyncQueryResult, arguments);
-                if (method.ReturnType == typeof(int) && IsFailure((int)returnValue))
-                {
-                    return false;
-                }
-
-                result = arguments[0];
-                return true;
-            }
-
-            return false;
-        }
-
-        private static object QueryAsyncServiceProvider(object asyncServiceProvider, Guid serviceGuid)
-        {
-            IAsyncServiceProvider localAsyncServiceProvider = asyncServiceProvider as IAsyncServiceProvider;
-            if (localAsyncServiceProvider != null)
-            {
-                object service = QueryLocalAsyncServiceProvider(localAsyncServiceProvider, serviceGuid);
-                if (service != null)
-                {
-                    return service;
-                }
-            }
-
-            MethodInfo queryServiceAsync = GetQueryServiceAsyncMethod(asyncServiceProvider.GetType());
-            if (queryServiceAsync == null)
-            {
-                return null;
-            }
-
-            ParameterInfo[] parameters = queryServiceAsync.GetParameters();
-            object[] arguments = new object[parameters.Length];
-            arguments[0] = serviceGuid;
-            if (parameters.Length == 2)
-            {
-                arguments[1] = true;
-            }
-
-            object asyncQueryResult = queryServiceAsync.Invoke(asyncServiceProvider, arguments);
-            return GetAsyncQueryResult(asyncQueryResult);
-        }
-
-        private static MethodInfo GetQueryServiceAsyncMethod(Type asyncServiceProviderType)
-        {
-            MethodInfo[] methods = asyncServiceProviderType.GetMethods(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (MethodInfo method in methods)
-            {
-                if (method.Name != "QueryServiceAsync"
-                    && !method.Name.EndsWith(".QueryServiceAsync", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length != 1 && parameters.Length != 2)
-                {
-                    continue;
-                }
-
-                Type serviceGuidParameterType = parameters[0].ParameterType;
-                if (serviceGuidParameterType.IsByRef)
-                {
-                    serviceGuidParameterType = serviceGuidParameterType.GetElementType();
-                }
-
-                if (serviceGuidParameterType != typeof(Guid))
-                {
-                    continue;
-                }
-
-                if (parameters.Length == 2 && parameters[1].ParameterType != typeof(bool))
-                {
-                    continue;
-                }
-
-                return method;
-            }
-
-            return null;
-        }
-
-        private static object QueryLocalAsyncServiceProvider(IAsyncServiceProvider asyncServiceProvider, Guid serviceGuid)
-        {
-            int hr = asyncServiceProvider.QueryServiceAsync(ref serviceGuid, out IVsTask serviceTask);
-            if (IsFailure(hr) || serviceTask == null)
-            {
-                return null;
-            }
-
-            hr = serviceTask.GetResult(out object service);
-            return IsFailure(hr) ? null : service;
         }
 
         private static bool TryGetBooleanValue(object value, out bool result)
@@ -418,20 +265,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle
                 }
             }
 
-            object asyncServiceProvider = _asyncServiceProvider;
-            if (asyncServiceProvider == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                return QueryAsyncServiceProvider(asyncServiceProvider, serviceGuid);
-            }
-            catch (Exception ex) when (!IsCriticalException(ex))
-            {
-                return null;
-            }
+            return null;
         }
     }
 }

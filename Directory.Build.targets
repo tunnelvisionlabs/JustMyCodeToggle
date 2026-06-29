@@ -1,0 +1,22 @@
+<Project>
+  <Target Name="PrepareVsixProjectReferences"
+          BeforeTargets="ResolveProjectReferences"
+          DependsOnTargets="PrepareProjectReferences"
+          Condition="'$(PrepareVsixProjectReferences)' == 'true'">
+    <MSBuild
+        Projects="@(_MSBuildProjectReferenceExistent)"
+        Targets="VSIXContainerProjectOutputGroup"
+        BuildInParallel="$(BuildInParallel)"
+        Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration); %(_MSBuildProjectReferenceExistent.SetPlatform); %(_MSBuildProjectReferenceExistent.SetTargetFramework); CreateVsixContainer=true"
+        Condition="'%(_MSBuildProjectReferenceExistent.CopyVsix)' == 'true'"
+        ContinueOnError="!$(BuildingProject)"
+        RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove)">
+
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceVsixOutputs" />
+    </MSBuild>
+
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(_ProjectReferenceVsixOutputs)" />
+    </ItemGroup>
+  </Target>
+</Project>

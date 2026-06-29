@@ -7,17 +7,17 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
     using System.Diagnostics;
     using System.Runtime.ExceptionServices;
     using System.Threading.Tasks;
+    using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Extensibility.Testing;
-    using _DTE = EnvDTE._DTE;
-    using DTE = EnvDTE.DTE;
+    using Microsoft.VisualStudio.Shell.Interop;
 
     public abstract class JustMyCodeToggleIntegrationTestBase : AbstractIdeIntegrationTest
     {
         protected async Task RunWithUnexpectedModalDialogDetectionAsync(Func<Task> operation)
         {
             string operationStackTrace = new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString();
-            DTE dte = await TestServices.Shell.GetRequiredGlobalServiceAsync<_DTE, DTE>(HangMitigatingCancellationToken);
-            IntPtr mainWindow = (IntPtr)dte.MainWindow.HWnd;
+            IVsUIShell uiShell = await TestServices.Shell.GetRequiredGlobalServiceAsync<SVsUIShell, IVsUIShell>(HangMitigatingCancellationToken);
+            ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out IntPtr mainWindow));
 
             using (UnexpectedModalDialogMonitor monitor = UnexpectedModalDialogMonitor.Start(mainWindow, operationStackTrace))
             {

@@ -10,8 +10,6 @@
       <Button guid="guidJustMyCodeTogglePackageCmdSet" id="cmdidJustMyCodeToggle" priority="0x0000" type="Button">
         <Icon guid="ImageCatalogGuid" id="JustMyCode" />
         <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Just My Code</ButtonText>
