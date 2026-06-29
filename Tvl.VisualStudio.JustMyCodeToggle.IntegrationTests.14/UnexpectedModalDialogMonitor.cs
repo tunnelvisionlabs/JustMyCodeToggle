@@ -169,9 +169,43 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
             }
 
             string className = GetClassName(window);
+            if (string.Equals(className, "#32770", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return this.IsBlockingOwnedWindow(window);
+        }
+
+        private bool IsBlockingOwnedWindow(IntPtr window)
+        {
             IntPtr owner = GetWindow(window, GW_OWNER);
-            return string.Equals(className, "#32770", StringComparison.Ordinal)
-                || (this.mainWindow != IntPtr.Zero && owner == this.mainWindow);
+            if (owner == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (this.mainWindow == IntPtr.Zero || !this.IsOwnedByMainWindow(owner))
+            {
+                return false;
+            }
+
+            return !IsWindowEnabled(owner) || !IsWindowEnabled(this.mainWindow);
+        }
+
+        private bool IsOwnedByMainWindow(IntPtr owner)
+        {
+            while (owner != IntPtr.Zero)
+            {
+                if (owner == this.mainWindow)
+                {
+                    return true;
+                }
+
+                owner = GetWindow(owner, GW_OWNER);
+            }
+
+            return false;
         }
 
         private static int GetProcessId(IntPtr window)
