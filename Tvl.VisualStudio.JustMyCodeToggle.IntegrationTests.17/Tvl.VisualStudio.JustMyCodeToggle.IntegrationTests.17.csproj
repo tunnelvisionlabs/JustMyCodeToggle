@@ -11,7 +11,12 @@
 
   <ItemGroup>
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\JustMyCodeToggleConstants.cs" Link="JustMyCodeToggleConstants.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIdeFactAttribute.cs" Link="JustMyCodeToggleIdeFactAttribute.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIdeFactDiscoverer.cs" Link="JustMyCodeToggleIdeFactDiscoverer.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIdeTestCase.cs" Link="JustMyCodeToggleIdeTestCase.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIdeTestCaseRunner.cs" Link="JustMyCodeToggleIdeTestCaseRunner.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIntegrationTest.cs" Link="JustMyCodeToggleIntegrationTest.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleInProcessIdeTestRunner.cs" Link="JustMyCodeToggleInProcessIdeTestRunner.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\SolutionExplorerInProcess.cs" Link="SolutionExplorerInProcess.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\UnexpectedModalDialogMonitor.cs" Link="UnexpectedModalDialogMonitor.cs" />
   </ItemGroup>

@@ -5,10 +5,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 {
     using System;
     using System.ComponentModel.Design;
-    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Runtime.ExceptionServices;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.Extensibility.Testing;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -22,15 +20,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
     {
         private const string CommandName = "DebuggerContextMenus.CallStackWindow.Debug.JustMyCodeToggle";
 
-        [IdeFact(MinVersion = VisualStudioVersion.VS2015)]
+        [JustMyCodeToggleIdeFact(MinVersion = VisualStudioVersion.VS2015)]
         public async Task CommandButtonTogglesJustMyCodeAsync()
         {
             DTE dte = await TestServices.Shell.GetRequiredGlobalServiceAsync<_DTE, DTE>(HangMitigatingCancellationToken);
             Assert.NotNull(dte);
 
-            await RunWithUnexpectedModalDialogDetectionAsync(
-                dte,
-                () => CreateTestProjectAsync(nameof(CommandButtonTogglesJustMyCodeAsync)));
+            await CreateTestProjectAsync(nameof(CommandButtonTogglesJustMyCodeAsync));
             var commandId = new CommandID(
                 JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet,
                 JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
@@ -51,9 +47,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
             try
             {
-                await RunWithUnexpectedModalDialogDetectionAsync(
-                    dte,
-                    () => TestServices.Shell.ExecuteCommandAsync(commandId, HangMitigatingCancellationToken));
+                await TestServices.Shell.ExecuteCommandAsync(commandId, HangMitigatingCancellationToken);
                 Assert.Equal(!originalValue, GetJustMyCodeValue(dte));
             }
             finally
@@ -94,39 +88,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
                 testName,
                 "JustMyCodeToggleTestProject",
                 HangMitigatingCancellationToken);
-        }
-
-        private static async Task RunWithUnexpectedModalDialogDetectionAsync(DTE dte, Func<Task> operation)
-        {
-            string operationStackTrace = new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString();
-            using (UnexpectedModalDialogMonitor monitor = UnexpectedModalDialogMonitor.Start((IntPtr)dte.MainWindow.HWnd, operationStackTrace))
-            {
-                Task operationTask = operation();
-                Task completedTask = await Task.WhenAny(operationTask, monitor.FailureTask).ConfigureAwait(false);
-
-                if (completedTask == monitor.FailureTask)
-                {
-                    await Task.WhenAny(operationTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
-                    throw await monitor.FailureTask.ConfigureAwait(false);
-                }
-
-                try
-                {
-                    await operationTask.ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    if (monitor.FailureTask.IsCompleted)
-                    {
-                        throw new AggregateException(await monitor.FailureTask.ConfigureAwait(false), ex);
-                    }
-
-                    ExceptionDispatchInfo.Capture(ex).Throw();
-                    throw;
-                }
-
-                monitor.ThrowIfDialogDetected();
-            }
         }
 
         private static Property GetJustMyCodeProperty(DTE dte)

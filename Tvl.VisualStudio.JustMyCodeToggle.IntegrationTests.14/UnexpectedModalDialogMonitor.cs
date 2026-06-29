@@ -22,20 +22,25 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
         private readonly IntPtr mainWindow;
         private readonly int processId;
-        private readonly string operationStackTrace;
+        private readonly string testStackTrace;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly TaskCompletionSource<Exception> failureSource;
         private readonly Task monitorTask;
         private Exception failure;
 
-        private UnexpectedModalDialogMonitor(IntPtr mainWindow, string operationStackTrace)
+        private UnexpectedModalDialogMonitor(IntPtr mainWindow, string testStackTrace)
+            : this(mainWindow, GetProcessId(mainWindow), testStackTrace)
+        {
+        }
+
+        private UnexpectedModalDialogMonitor(IntPtr mainWindow, int processId, string testStackTrace)
         {
             this.mainWindow = mainWindow;
-            this.operationStackTrace = operationStackTrace;
+            this.processId = processId;
+            this.testStackTrace = testStackTrace;
             this.cancellationTokenSource = new CancellationTokenSource();
             this.failureSource = new TaskCompletionSource<Exception>();
 
-            GetWindowThreadProcessId(mainWindow, out this.processId);
             this.monitorTask = Task.Run(() => this.MonitorAsync(this.cancellationTokenSource.Token));
         }
 
@@ -49,9 +54,21 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
             }
         }
 
-        public static UnexpectedModalDialogMonitor Start(IntPtr mainWindow, string operationStackTrace)
+        public static UnexpectedModalDialogMonitor Start(IntPtr mainWindow, string testStackTrace)
         {
-            return new UnexpectedModalDialogMonitor(mainWindow, operationStackTrace);
+            return new UnexpectedModalDialogMonitor(mainWindow, testStackTrace);
+        }
+
+        public static UnexpectedModalDialogMonitor StartForCurrentProcess(string testStackTrace)
+        {
+            using (Process currentProcess = Process.GetCurrentProcess())
+            {
+                currentProcess.Refresh();
+                return new UnexpectedModalDialogMonitor(
+                    currentProcess.MainWindowHandle,
+                    currentProcess.Id,
+                    testStackTrace);
+            }
         }
 
         public void Dispose()
@@ -85,8 +102,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
                                 + Environment.NewLine
                                 + dialog
                                 + Environment.NewLine
-                                + "Operation stack trace:" + Environment.NewLine
-                                + this.operationStackTrace));
+                                + "Test stack trace:" + Environment.NewLine
+                                + this.testStackTrace));
 
                         return;
                     }
@@ -130,7 +147,12 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
         private bool IsUnexpectedModalDialog(IntPtr window)
         {
-            if (window == IntPtr.Zero || window == this.mainWindow)
+            if (window == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            if (this.mainWindow != IntPtr.Zero && window == this.mainWindow)
             {
                 return false;
             }
@@ -149,7 +171,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
             string className = GetClassName(window);
             IntPtr owner = GetWindow(window, GW_OWNER);
             return string.Equals(className, "#32770", StringComparison.Ordinal)
-                || owner == this.mainWindow;
+                || (this.mainWindow != IntPtr.Zero && owner == this.mainWindow);
+        }
+
+        private static int GetProcessId(IntPtr window)
+        {
+            GetWindowThreadProcessId(window, out int processId);
+            return processId;
         }
 
         private static ModalDialogInfo CaptureDialogInfo(IntPtr dialog)
