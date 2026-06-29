@@ -1,13 +1,144 @@
 version: 1.0.{build}
-image: Visual Studio 2017
+image:
+- Visual Studio 2019
+- Visual Studio 2022
 configuration: Release
 platform: Any CPU
 init:
 - git config --global core.autocrlf true
-install:
-- nuget restore
+before_build:
+- echo /restore /bl >> msbuild.rsp
 build:
   verbosity: minimal
-test: off
+test_script:
+- ps: |
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2019") {
+      $integrationTestAssembly = "Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\bin\$env:CONFIGURATION\net46\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14.dll"
+    } elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2022") {
+      $integrationTestAssembly = "Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.17\bin\$env:CONFIGURATION\net472\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.17.dll"
+    } else {
+      throw "Unsupported image: $env:APPVEYOR_BUILD_WORKER_IMAGE"
+    }
+
+    $xunitConsole = "$env:USERPROFILE\.nuget\packages\xunit.runner.console\2.4.1\tools\net472\xunit.console.x86.exe"
+    $testResultsDirectory = "TestResults"
+    $testResultsFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.log"
+    $testErrorFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.err.log"
+    $testResultsXmlFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.xml"
+    New-Item -ItemType Directory -Force -Path $testResultsDirectory | Out-Null
+    $env:XUNIT_LOGS = (Resolve-Path $testResultsDirectory).Path
+
+    function Publish-XunitResults {
+      if (-not $env:APPVEYOR_JOB_ID) {
+        return
+      }
+
+      if (-not (Test-Path $testResultsXmlFile) -or (Get-Item $testResultsXmlFile).Length -eq 0) {
+        Write-Host "xUnit XML results file was not created."
+        return
+      }
+
+      $webClient = New-Object 'System.Net.WebClient'
+      try {
+        $webClient.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsXmlFile)) | Out-Null
+        Write-Host "Uploaded xUnit XML results to AppVeyor."
+      } catch {
+        Write-Warning "Unable to upload xUnit XML results to AppVeyor: $($_.Exception.Message)"
+      } finally {
+        $webClient.Dispose()
+      }
+    }
+
+    function Add-TimeoutTestResult {
+      if (-not (Get-Command Add-AppveyorTest -ErrorAction SilentlyContinue)) {
+        return
+      }
+
+      $durationMilliseconds = [long][Math]::Max(0, ((Get-Date) - $testStartTime).TotalMilliseconds)
+      $stdOut = if (Test-Path $testResultsFile) { @(Get-Content $testResultsFile -Tail 200) -join [Environment]::NewLine } else { "" }
+      $stdErr = if (Test-Path $testErrorFile) { @(Get-Content $testErrorFile -Tail 200) -join [Environment]::NewLine } else { "" }
+
+      Add-AppveyorTest `
+        -Name "Integration tests timed out ($env:APPVEYOR_BUILD_WORKER_IMAGE)" `
+        -Framework xUnit `
+        -FileName $integrationTestAssembly `
+        -Outcome Failed `
+        -Duration $durationMilliseconds `
+        -ErrorMessage "xUnit exceeded the 15 minute AppVeyor timeout guard." `
+        -StdOut $stdOut `
+        -StdErr $stdErr
+    }
+
+    function Push-TestResultArtifacts {
+      if (-not (Get-Command Push-AppveyorArtifact -ErrorAction SilentlyContinue)) {
+        return
+      }
+
+      $buildRoot = (Resolve-Path ".").Path
+      Get-ChildItem -Path $testResultsDirectory -Recurse -File | ForEach-Object {
+        $artifactName = $_.FullName.Substring($buildRoot.Length).TrimStart([char[]]@("\", "/"))
+        Push-AppveyorArtifact $_.FullName -FileName $artifactName
+      }
+    }
+
+    $arguments = @($integrationTestAssembly, "-noshadow", "-noautoreporters", "-appdomains", "denied", "-parallel", "none", "-verbose", "-xml", $testResultsXmlFile)
+    $testStartTime = Get-Date
+    $process = Start-Process -FilePath $xunitConsole -ArgumentList $arguments -NoNewWindow -RedirectStandardOutput $testResultsFile -RedirectStandardError $testErrorFile -PassThru
+    $deadline = (Get-Date).AddMinutes(15)
+    $lastOutputLine = 0
+    $timedOut = $false
+
+    while (-not $process.HasExited) {
+      Start-Sleep -Seconds 10
+
+      if (Test-Path $testResultsFile) {
+        $outputLines = @(Get-Content $testResultsFile)
+        for ($i = $lastOutputLine; $i -lt $outputLines.Count; $i++) {
+          Write-Host $outputLines[$i]
+        }
+
+        $lastOutputLine = $outputLines.Count
+      }
+
+      if ((Get-Date) -ge $deadline) {
+        Write-Host "xUnit exceeded the 15 minute AppVeyor timeout guard. Ending the test process so artifacts can be uploaded."
+        $timedOut = $true
+        $process.Kill()
+        $process.WaitForExit(5000) | Out-Null
+        break
+      }
+    }
+
+    if (Test-Path $testResultsFile) {
+      $outputLines = @(Get-Content $testResultsFile)
+      for ($i = $lastOutputLine; $i -lt $outputLines.Count; $i++) {
+        Write-Host $outputLines[$i]
+      }
+    }
+
+    if (Test-Path $testErrorFile) {
+      Get-Content $testErrorFile | ForEach-Object { Write-Host $_ }
+    }
+
+    if ($timedOut) {
+      Add-TimeoutTestResult
+
+      $processNames = @("devenv", "ServiceHub.Host.CLR", "ServiceHub.Host.netfx")
+      Get-Process -ErrorAction SilentlyContinue | Where-Object { $processNames -contains $_.ProcessName } | Stop-Process -Force -ErrorAction SilentlyContinue
+      $testExitCode = 124
+    } else {
+      $testExitCode = $process.ExitCode
+    }
+
+    Publish-XunitResults
+
+    if ($testExitCode -ne 0) {
+      Push-TestResultArtifacts
+      $host.SetShouldExit($testExitCode)
+    }
 artifacts:
-- path: '**\*.vsix'
+- path: 'Tvl.VisualStudio.JustMyCodeToggle\bin\**\*.vsix'
+- path: 'TestResults\**\*'
+  name: test results
+- path: '\msbuild.binlog'
+  name: build log

@@ -4,89 +4,268 @@
 namespace Tvl.VisualStudio.JustMyCodeToggle
 {
     using System;
-    using System.ComponentModel.Design;
     using System.Runtime.InteropServices;
     using System.Threading;
-    using Microsoft;
-    using Microsoft.VisualStudio;
-    using Microsoft.VisualStudio.Shell;
-    using IMenuCommandService = System.ComponentModel.Design.IMenuCommandService;
-    using Task = System.Threading.Tasks.Task;
+    using Microsoft.VisualStudio.OLE.Interop;
+    using Microsoft.VisualStudio.Shell.Interop;
+    using Tvl.VisualStudio.JustMyCodeToggle.Lightup;
+    using OleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
+    [ComVisible(true)]
+    [ClassInterface(ClassInterfaceType.None)]
     [Guid(JustMyCodeToggleConstants.GuidJustMyCodeTogglePackageString)]
-    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [ProvideMenuResource(1000, 1)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExistsAndFullyLoaded_string, PackageAutoLoadFlags.BackgroundLoad)]
-    internal class JustMyCodeTogglePackage : AsyncPackage
+    public sealed class JustMyCodeTogglePackage : IVsPackage, IOleCommandTarget, IAsyncLoadablePackageInitialize
     {
-        private readonly OleMenuCommand _command;
+        private const int ENotImpl = unchecked((int)0x80004001);
+        private const int EPointer = unchecked((int)0x80004003);
+        private const int EFail = unchecked((int)0x80004005);
+        private const int OleCmdErrENotSupported = unchecked((int)0x80040100);
+        private const int OleCmdErrEUnknownGroup = unchecked((int)0x80040104);
+        private const int SOk = 0;
 
-        public JustMyCodeTogglePackage()
-        {
-            var id = new CommandID(JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet, JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
-            EventHandler invokeHandler = HandleInvokeJustMyCodeToggle;
-            EventHandler changeHandler = HandleChangeJustMyCodeToggle;
-            EventHandler beforeQueryStatus = HandleBeforeQueryStatusJustMyCodeToggle;
-            _command = new OleMenuCommand(invokeHandler, changeHandler, beforeQueryStatus, id);
-        }
+        private static readonly Guid DteServiceGuid = new Guid("04A72314-32E9-48E2-9B87-A63603454F3E");
+        private static readonly Guid IidIUnknown = new Guid("00000000-0000-0000-C000-000000000046");
 
-        public EnvDTE.DTE ApplicationObject
+        private OleServiceProvider _serviceProvider;
+
+        private DteApplicationWrapper ApplicationObject
         {
             get
             {
-                return GetService(typeof(EnvDTE._DTE)) as EnvDTE.DTE;
+                return DteApplicationWrapper.FromObject(QueryService(DteServiceGuid, IidIUnknown));
             }
         }
 
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        public int SetSite(OleServiceProvider psp)
         {
-            await base.InitializeAsync(cancellationToken, progress);
-
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-            var mcs = (IMenuCommandService)await GetServiceAsync(typeof(IMenuCommandService));
-            Assumes.Present(mcs);
-            mcs.AddCommand(_command);
+            _serviceProvider = psp;
+            return SOk;
         }
 
-        private void HandleInvokeJustMyCodeToggle(object sender, EventArgs e)
+        int IAsyncLoadablePackageInitialize.Initialize(
+            object pServiceProvider,
+            object pProfferService,
+            object pProgressCallback,
+            out IVsTask ppTask)
+        {
+            ppTask = null;
+
+            return SOk;
+        }
+
+        public int QueryClose(out int pfCanClose)
+        {
+            pfCanClose = 1;
+            return SOk;
+        }
+
+        public int Close()
+        {
+            _serviceProvider = null;
+            return SOk;
+        }
+
+        public int GetAutomationObject(string pszPropName, out object ppDisp)
+        {
+            ppDisp = null;
+            return ENotImpl;
+        }
+
+        public int CreateTool(ref Guid rguidPersistenceSlot)
+        {
+            return ENotImpl;
+        }
+
+        public int ResetDefaults(uint grfFlags)
+        {
+            return SOk;
+        }
+
+        public int GetPropertyPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage)
+        {
+            return ENotImpl;
+        }
+
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
+        {
+            if (pguidCmdGroup != JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet)
+            {
+                return OleCmdErrEUnknownGroup;
+            }
+
+            if (prgCmds == null)
+            {
+                return EPointer;
+            }
+
+            uint commandCount = Math.Min(cCmds, (uint)prgCmds.Length);
+            for (int i = 0; i < commandCount; i++)
+            {
+                if (prgCmds[i].cmdID != JustMyCodeToggleConstants.CmdidJustMyCodeToggle)
+                {
+                    continue;
+                }
+
+                uint commandFlags = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+                if (TryGetJustMyCode(out bool enabled) && enabled)
+                {
+                    commandFlags |= (uint)OLECMDF.OLECMDF_LATCHED;
+                }
+
+                prgCmds[i].cmdf = commandFlags;
+            }
+
+            return SOk;
+        }
+
+        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            if (pguidCmdGroup != JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet)
+            {
+                return OleCmdErrEUnknownGroup;
+            }
+
+            if (nCmdID != JustMyCodeToggleConstants.CmdidJustMyCodeToggle)
+            {
+                return OleCmdErrENotSupported;
+            }
+
+            return ToggleJustMyCode() ? SOk : EFail;
+        }
+
+        private static bool IsCriticalException(Exception exception)
+        {
+            return exception is AccessViolationException
+                || exception is AppDomainUnloadedException
+                || exception is OutOfMemoryException
+                || exception is ThreadAbortException;
+        }
+
+        private static bool IsFailure(int hr)
+        {
+            return hr < 0;
+        }
+
+        private static bool TryGetBooleanValue(object value, out bool result)
+        {
+            if (value is bool boolValue)
+            {
+                result = boolValue;
+                return true;
+            }
+
+            if (value is int intValue)
+            {
+                result = intValue != 0;
+                return true;
+            }
+
+            result = false;
+            return false;
+        }
+
+        private bool TryGetJustMyCode(out bool enabled)
+        {
+            enabled = false;
+
+            try
+            {
+                DtePropertyWrapper enableJustMyCode = GetJustMyCodeProperty();
+                if (!enableJustMyCode.IsDefault)
+                {
+                    object value = enableJustMyCode.Value;
+                    return TryGetBooleanValue(value, out enabled);
+                }
+            }
+            catch (Exception ex) when (!IsCriticalException(ex))
+            {
+            }
+
+            return false;
+        }
+
+        private bool ToggleJustMyCode()
         {
             try
             {
-                EnvDTE.Property enableJustMyCode = ApplicationObject.get_Properties("Debugging", "General").Item("EnableJustMyCode");
-                if (enableJustMyCode.Value is bool value)
+                DtePropertyWrapper enableJustMyCode = GetJustMyCodeProperty();
+                if (!enableJustMyCode.IsDefault)
                 {
-                    enableJustMyCode.Value = !value;
+                    object value = enableJustMyCode.Value;
+                    if (TryGetBooleanValue(value, out bool enabled))
+                    {
+                        enableJustMyCode.Value = !enabled;
+                        UpdateCommandUI();
+                        return true;
+                    }
                 }
             }
-            catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
+            catch (Exception ex) when (!IsCriticalException(ex))
             {
             }
+
+            return false;
         }
 
-        private void HandleChangeJustMyCodeToggle(object sender, EventArgs e)
+        private DtePropertyWrapper GetJustMyCodeProperty()
         {
+            DteApplicationWrapper applicationObject = ApplicationObject;
+            if (applicationObject.IsDefault)
+            {
+                return default(DtePropertyWrapper);
+            }
+
+            DtePropertiesWrapper properties = applicationObject.get_Properties("Debugging", "General");
+            if (properties.IsDefault)
+            {
+                return default(DtePropertyWrapper);
+            }
+
+            return properties.Item("EnableJustMyCode");
         }
 
-        private void HandleBeforeQueryStatusJustMyCodeToggle(object sender, EventArgs e)
+        private void UpdateCommandUI()
         {
             try
             {
-                _command.Supported = true;
+                IVsUIShell uiShell = QueryService<IVsUIShell>(typeof(SVsUIShell).GUID);
+                uiShell?.UpdateCommandUI(0);
+            }
+            catch (Exception ex) when (!IsCriticalException(ex))
+            {
+            }
+        }
 
-                EnvDTE.Property enableJustMyCode = ApplicationObject.get_Properties("Debugging", "General").Item("EnableJustMyCode");
-                if (enableJustMyCode.Value is bool value)
+        private T QueryService<T>(Guid serviceGuid)
+            where T : class
+        {
+            Guid interfaceGuid = typeof(T).GUID;
+            return QueryService(serviceGuid, interfaceGuid) as T;
+        }
+
+        private object QueryService(Guid serviceGuid, Guid interfaceGuid)
+        {
+            OleServiceProvider serviceProvider = _serviceProvider;
+            if (serviceProvider != null)
+            {
+                IntPtr servicePointer;
+                int hr = serviceProvider.QueryService(ref serviceGuid, ref interfaceGuid, out servicePointer);
+                if (IsFailure(hr) || servicePointer == IntPtr.Zero)
                 {
-                    _command.Checked = value;
+                    return null;
                 }
 
-                _command.Enabled = true;
+                try
+                {
+                    return Marshal.GetObjectForIUnknown(servicePointer);
+                }
+                finally
+                {
+                    Marshal.Release(servicePointer);
+                }
             }
-            catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
-            {
-                _command.Supported = false;
-                _command.Enabled = false;
-            }
+
+            return null;
         }
     }
 }
