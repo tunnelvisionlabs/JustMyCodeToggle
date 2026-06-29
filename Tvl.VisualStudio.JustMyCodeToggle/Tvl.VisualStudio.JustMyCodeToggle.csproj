@@ -10,7 +10,7 @@
     <Copyright>Copyright © Sam Harwell 2017</Copyright>
     <Version>1.3.0.0</Version>
     <FileVersion>1.3.0.0</FileVersion>
-    <InformationalVersion>1.3.0-dev</InformationalVersion>
+    <InformationalVersion>1.3.0</InformationalVersion>
 
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
     <CreateVsixContainer>true</CreateVsixContainer>
