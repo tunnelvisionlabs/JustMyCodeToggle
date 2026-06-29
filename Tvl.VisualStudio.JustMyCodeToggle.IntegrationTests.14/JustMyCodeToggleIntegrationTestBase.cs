@@ -5,38 +5,46 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 {
     using System;
     using System.Diagnostics;
+    using System.Runtime.ExceptionServices;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.Extensibility.Testing;
+    using _DTE = EnvDTE._DTE;
+    using DTE = EnvDTE.DTE;
 
     public abstract class JustMyCodeToggleIntegrationTestBase : AbstractIdeIntegrationTest
     {
-        protected async Task RunWithUnexpectedModalDialogDetectionAsync(Func<Task> testBody)
+        protected async Task RunWithUnexpectedModalDialogDetectionAsync(Func<Task> operation)
         {
-            string testStackTrace = new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString();
+            string operationStackTrace = new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString();
+            DTE dte = await TestServices.Shell.GetRequiredGlobalServiceAsync<_DTE, DTE>(HangMitigatingCancellationToken);
+            IntPtr mainWindow = (IntPtr)dte.MainWindow.HWnd;
 
-            // Reporting from test cleanup loses the useful exception through the harness IPC boundary.
-            using (UnexpectedModalDialogMonitor monitor = UnexpectedModalDialogMonitor.StartForCurrentProcess(testStackTrace))
+            using (UnexpectedModalDialogMonitor monitor = UnexpectedModalDialogMonitor.Start(mainWindow, operationStackTrace))
             {
-                Task testTask = testBody();
-                Task completedTask = await Task.WhenAny(testTask, monitor.FailureTask).ConfigureAwait(false);
+                Task operationTask = operation();
+                Task completedTask = await Task.WhenAny(operationTask, monitor.FailureTask).ConfigureAwait(false);
 
                 if (completedTask == monitor.FailureTask)
                 {
-                    Exception dialogException = await monitor.FailureTask.ConfigureAwait(false);
-
-                    try
-                    {
-                        await testTask.ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException(dialogException.Message, ex);
-                    }
-
-                    throw dialogException;
+                    await Task.WhenAny(operationTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+                    throw await monitor.FailureTask.ConfigureAwait(false);
                 }
 
-                await testTask.ConfigureAwait(false);
+                try
+                {
+                    await operationTask.ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    if (monitor.FailureTask.IsCompleted)
+                    {
+                        throw new AggregateException(await monitor.FailureTask.ConfigureAwait(false), ex);
+                    }
+
+                    ExceptionDispatchInfo.Capture(ex).Throw();
+                    throw;
+                }
+
                 monitor.ThrowIfDialogDetected();
             }
         }

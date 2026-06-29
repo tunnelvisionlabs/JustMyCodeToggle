@@ -21,17 +21,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
         private const string CommandName = "DebuggerContextMenus.CallStackWindow.Debug.JustMyCodeToggle";
 
         [IdeFact(MinVersion = VisualStudioVersion.VS2015)]
-        public Task CommandButtonTogglesJustMyCodeAsync()
-        {
-            return RunWithUnexpectedModalDialogDetectionAsync(CommandButtonTogglesJustMyCodeCoreAsync);
-        }
-
-        private async Task CommandButtonTogglesJustMyCodeCoreAsync()
+        public async Task CommandButtonTogglesJustMyCodeAsync()
         {
             DTE dte = await TestServices.Shell.GetRequiredGlobalServiceAsync<_DTE, DTE>(HangMitigatingCancellationToken);
             Assert.NotNull(dte);
 
-            await CreateTestProjectAsync(nameof(CommandButtonTogglesJustMyCodeAsync));
+            await RunWithUnexpectedModalDialogDetectionAsync(
+                () => CreateTestProjectAsync(nameof(CommandButtonTogglesJustMyCodeAsync)));
             var commandId = new CommandID(
                 JustMyCodeToggleConstants.GuidJustMyCodeToggleCommandSet,
                 JustMyCodeToggleConstants.CmdidJustMyCodeToggle);
@@ -52,7 +48,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
             try
             {
-                await TestServices.Shell.ExecuteCommandAsync(commandId, HangMitigatingCancellationToken);
+                await RunWithUnexpectedModalDialogDetectionAsync(
+                    () => TestServices.Shell.ExecuteCommandAsync(commandId, HangMitigatingCancellationToken));
                 Assert.Equal(!originalValue, GetJustMyCodeValue(dte));
             }
             finally

@@ -5,7 +5,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
@@ -22,22 +21,22 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
         private readonly IntPtr mainWindow;
         private readonly int processId;
-        private readonly string testStackTrace;
+        private readonly string operationStackTrace;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly TaskCompletionSource<Exception> failureSource;
         private readonly Task monitorTask;
         private Exception failure;
 
-        private UnexpectedModalDialogMonitor(IntPtr mainWindow, string testStackTrace)
-            : this(mainWindow, GetProcessId(mainWindow), testStackTrace)
+        private UnexpectedModalDialogMonitor(IntPtr mainWindow, string operationStackTrace)
+            : this(mainWindow, GetProcessId(mainWindow), operationStackTrace)
         {
         }
 
-        private UnexpectedModalDialogMonitor(IntPtr mainWindow, int processId, string testStackTrace)
+        private UnexpectedModalDialogMonitor(IntPtr mainWindow, int processId, string operationStackTrace)
         {
             this.mainWindow = mainWindow;
             this.processId = processId;
-            this.testStackTrace = testStackTrace;
+            this.operationStackTrace = operationStackTrace;
             this.cancellationTokenSource = new CancellationTokenSource();
             this.failureSource = new TaskCompletionSource<Exception>();
 
@@ -54,21 +53,9 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
             }
         }
 
-        public static UnexpectedModalDialogMonitor Start(IntPtr mainWindow, string testStackTrace)
+        public static UnexpectedModalDialogMonitor Start(IntPtr mainWindow, string operationStackTrace)
         {
-            return new UnexpectedModalDialogMonitor(mainWindow, testStackTrace);
-        }
-
-        public static UnexpectedModalDialogMonitor StartForCurrentProcess(string testStackTrace)
-        {
-            using (Process currentProcess = Process.GetCurrentProcess())
-            {
-                currentProcess.Refresh();
-                return new UnexpectedModalDialogMonitor(
-                    currentProcess.MainWindowHandle,
-                    currentProcess.Id,
-                    testStackTrace);
-            }
+            return new UnexpectedModalDialogMonitor(mainWindow, operationStackTrace);
         }
 
         public void Dispose()
@@ -102,8 +89,8 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
                                 + Environment.NewLine
                                 + dialog
                                 + Environment.NewLine
-                                + "Test stack trace:" + Environment.NewLine
-                                + this.testStackTrace));
+                                + "Operation stack trace:" + Environment.NewLine
+                                + this.operationStackTrace));
 
                         return;
                     }
