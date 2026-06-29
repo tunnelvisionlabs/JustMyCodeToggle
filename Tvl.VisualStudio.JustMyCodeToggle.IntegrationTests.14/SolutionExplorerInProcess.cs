@@ -18,8 +18,6 @@ namespace Microsoft.VisualStudio.Extensibility.Testing
         private const string CSharpLanguageName = "CSharp";
         private const string ConsoleApplicationTemplateName = "ConsoleApplication.zip";
 
-        private static readonly Guid CSharpProjectTypeGuid = new Guid("FAE04EC0-301F-11D3-BF4B-00C04F79EFBC");
-
         public async Task CreateCSharpConsoleApplicationAsync(
             string solutionDirectory,
             string solutionName,
@@ -72,10 +70,10 @@ namespace Microsoft.VisualStudio.Extensibility.Testing
 
         private static void VerifyProjectIsLoaded(IVsSolution solution)
         {
-            Guid projectType = CSharpProjectTypeGuid;
+            Guid projectType = Guid.Empty;
             ErrorHandler.ThrowOnFailure(
                 solution.GetProjectEnum(
-                    (uint)(__VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION | __VSENUMPROJFLAGS.EPF_MATCHTYPE),
+                    (uint)__VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION,
                     ref projectType,
                     out IEnumHierarchies projects));
 
@@ -83,7 +81,7 @@ namespace Microsoft.VisualStudio.Extensibility.Testing
             ErrorHandler.ThrowOnFailure(projects.Next(1, hierarchy, out uint fetched));
             if (fetched == 0 || hierarchy[0] == null)
             {
-                throw new InvalidOperationException("The C# project template did not create a loaded project.");
+                throw new InvalidOperationException("The project template did not create a loaded project.");
             }
         }
     }
