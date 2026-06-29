@@ -5,6 +5,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
@@ -82,10 +83,15 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
                     ModalDialogInfo dialog = this.FindUnexpectedModalDialog();
                     if (dialog != null)
                     {
-                        DismissDialog(dialog.Handle);
+                        bool debuggerAttached = Debugger.IsAttached;
+                        if (!debuggerAttached)
+                        {
+                            DismissDialog(dialog.Handle);
+                        }
+
                         this.SetFailure(
                             new InvalidOperationException(
-                                "Unexpected modal dialog detected and dismissed." + Environment.NewLine
+                                GetDialogDetectedMessage(debuggerAttached) + Environment.NewLine
                                 + Environment.NewLine
                                 + dialog
                                 + Environment.NewLine
@@ -105,6 +111,13 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
             {
                 this.SetFailure(new InvalidOperationException("Unexpected modal dialog monitor failed.", ex));
             }
+        }
+
+        private static string GetDialogDetectedMessage(bool debuggerAttached)
+        {
+            return debuggerAttached
+                ? "Unexpected modal dialog detected and left open because the debugger is attached."
+                : "Unexpected modal dialog detected and dismissed.";
         }
 
         private void SetFailure(Exception exception)
