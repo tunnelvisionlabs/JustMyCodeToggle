@@ -24,10 +24,65 @@ test_script:
     $testResultsDirectory = "TestResults"
     $testResultsFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.log"
     $testErrorFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.err.log"
+    $testResultsXmlFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.xml"
     New-Item -ItemType Directory -Force -Path $testResultsDirectory | Out-Null
     $env:XUNIT_LOGS = (Resolve-Path $testResultsDirectory).Path
 
-    $arguments = @($integrationTestAssembly, "-noshadow", "-noautoreporters", "-appdomains", "denied", "-parallel", "none", "-verbose")
+    function Publish-XunitResults {
+      if (-not $env:APPVEYOR_JOB_ID) {
+        return
+      }
+
+      if (-not (Test-Path $testResultsXmlFile) -or (Get-Item $testResultsXmlFile).Length -eq 0) {
+        Write-Host "xUnit XML results file was not created."
+        return
+      }
+
+      $webClient = New-Object 'System.Net.WebClient'
+      try {
+        $webClient.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsXmlFile)) | Out-Null
+        Write-Host "Uploaded xUnit XML results to AppVeyor."
+      } catch {
+        Write-Warning "Unable to upload xUnit XML results to AppVeyor: $($_.Exception.Message)"
+      } finally {
+        $webClient.Dispose()
+      }
+    }
+
+    function Add-TimeoutTestResult {
+      if (-not (Get-Command Add-AppveyorTest -ErrorAction SilentlyContinue)) {
+        return
+      }
+
+      $durationMilliseconds = [long][Math]::Max(0, ((Get-Date) - $testStartTime).TotalMilliseconds)
+      $stdOut = if (Test-Path $testResultsFile) { @(Get-Content $testResultsFile -Tail 200) -join [Environment]::NewLine } else { "" }
+      $stdErr = if (Test-Path $testErrorFile) { @(Get-Content $testErrorFile -Tail 200) -join [Environment]::NewLine } else { "" }
+
+      Add-AppveyorTest `
+        -Name "Integration tests timed out ($env:APPVEYOR_BUILD_WORKER_IMAGE)" `
+        -Framework xUnit `
+        -FileName $integrationTestAssembly `
+        -Outcome Failed `
+        -Duration $durationMilliseconds `
+        -ErrorMessage "xUnit exceeded the 15 minute AppVeyor timeout guard." `
+        -StdOut $stdOut `
+        -StdErr $stdErr
+    }
+
+    function Push-TestResultArtifacts {
+      if (-not (Get-Command Push-AppveyorArtifact -ErrorAction SilentlyContinue)) {
+        return
+      }
+
+      $buildRoot = (Resolve-Path ".").Path
+      Get-ChildItem -Path $testResultsDirectory -Recurse -File | ForEach-Object {
+        $artifactName = $_.FullName.Substring($buildRoot.Length).TrimStart([char[]]@("\", "/"))
+        Push-AppveyorArtifact $_.FullName -FileName $artifactName
+      }
+    }
+
+    $arguments = @($integrationTestAssembly, "-noshadow", "-noautoreporters", "-appdomains", "denied", "-parallel", "none", "-verbose", "-xml", $testResultsXmlFile)
+    $testStartTime = Get-Date
     $process = Start-Process -FilePath $xunitConsole -ArgumentList $arguments -NoNewWindow -RedirectStandardOutput $testResultsFile -RedirectStandardError $testErrorFile -PassThru
     $deadline = (Get-Date).AddMinutes(15)
     $lastOutputLine = 0
@@ -66,13 +121,21 @@ test_script:
     }
 
     if ($timedOut) {
-      Get-Process devenv, ServiceHub.Host.CLR, ServiceHub.Host.netfx -ErrorAction SilentlyContinue | Stop-Process -Force
+      Add-TimeoutTestResult
+
+      $processNames = @("devenv", "ServiceHub.Host.CLR", "ServiceHub.Host.netfx")
+      Get-Process -ErrorAction SilentlyContinue | Where-Object { $processNames -contains $_.ProcessName } | Stop-Process -Force -ErrorAction SilentlyContinue
       $testExitCode = 124
     } else {
       $testExitCode = $process.ExitCode
     }
 
-    if ($testExitCode -ne 0) { $host.SetShouldExit($testExitCode) }
+    Publish-XunitResults
+
+    if ($testExitCode -ne 0) {
+      Push-TestResultArtifacts
+      $host.SetShouldExit($testExitCode)
+    }
 artifacts:
 - path: '**\*.vsix'
 - path: 'TestResults\**\*'
