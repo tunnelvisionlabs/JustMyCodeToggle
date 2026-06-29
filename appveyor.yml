@@ -23,15 +23,59 @@ test_script:
     $xunitConsole = "$env:USERPROFILE\.nuget\packages\xunit.runner.console\2.4.1\tools\net472\xunit.console.x86.exe"
     $testResultsDirectory = "TestResults"
     $testResultsFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.log"
+    $testErrorFile = "$testResultsDirectory\$($env:APPVEYOR_BUILD_WORKER_IMAGE -replace '[^A-Za-z0-9_.-]', '-')-xunit.err.log"
     New-Item -ItemType Directory -Force -Path $testResultsDirectory | Out-Null
+    $env:XUNIT_LOGS = (Resolve-Path $testResultsDirectory).Path
 
-    & $xunitConsole $integrationTestAssembly -noshadow -noautoreporters -appdomains denied -parallel none -verbose 2>&1 | Tee-Object -FilePath $testResultsFile
-    $testExitCode = $LastExitCode
+    $arguments = @($integrationTestAssembly, "-noshadow", "-noautoreporters", "-appdomains", "denied", "-parallel", "none", "-verbose")
+    $process = Start-Process -FilePath $xunitConsole -ArgumentList $arguments -NoNewWindow -RedirectStandardOutput $testResultsFile -RedirectStandardError $testErrorFile -PassThru
+    $deadline = (Get-Date).AddMinutes(15)
+    $lastOutputLine = 0
+    $timedOut = $false
+
+    while (-not $process.HasExited) {
+      Start-Sleep -Seconds 10
+
+      if (Test-Path $testResultsFile) {
+        $outputLines = @(Get-Content $testResultsFile)
+        for ($i = $lastOutputLine; $i -lt $outputLines.Count; $i++) {
+          Write-Host $outputLines[$i]
+        }
+
+        $lastOutputLine = $outputLines.Count
+      }
+
+      if ((Get-Date) -ge $deadline) {
+        Write-Host "xUnit exceeded the 15 minute AppVeyor timeout guard. Ending the test process so artifacts can be uploaded."
+        $timedOut = $true
+        $process.Kill()
+        $process.WaitForExit(5000) | Out-Null
+        break
+      }
+    }
+
+    if (Test-Path $testResultsFile) {
+      $outputLines = @(Get-Content $testResultsFile)
+      for ($i = $lastOutputLine; $i -lt $outputLines.Count; $i++) {
+        Write-Host $outputLines[$i]
+      }
+    }
+
+    if (Test-Path $testErrorFile) {
+      Get-Content $testErrorFile | ForEach-Object { Write-Host $_ }
+    }
+
+    if ($timedOut) {
+      Get-Process devenv, ServiceHub.Host.CLR, ServiceHub.Host.netfx -ErrorAction SilentlyContinue | Stop-Process -Force
+      $testExitCode = 124
+    } else {
+      $testExitCode = $process.ExitCode
+    }
 
     if ($testExitCode -ne 0) { $host.SetShouldExit($testExitCode) }
 artifacts:
 - path: '**\*.vsix'
-- path: 'TestResults\*.log'
+- path: 'TestResults\**\*'
   name: test results
 - path: '\msbuild.binlog'
   name: build log
