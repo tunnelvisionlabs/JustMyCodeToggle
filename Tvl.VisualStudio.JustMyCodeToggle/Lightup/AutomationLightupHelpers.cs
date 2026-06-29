@@ -4,18 +4,24 @@
 namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
 {
     using System;
-    using System.Globalization;
+    using System.Collections.Concurrent;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
+    using System.Runtime.InteropServices;
 
     internal static class AutomationLightupHelpers
     {
         public static Func<object, TResult> CreatePropertyAccessor<TResult>(Type type, string propertyName)
         {
+            ConcurrentDictionary<Type, Func<object, TResult>> runtimeAccessors =
+                new ConcurrentDictionary<Type, Func<object, TResult>>();
+
             TResult FallbackAccessor(object instance)
             {
-                return InvokeComMember<TResult>(instance, propertyName, BindingFlags.GetProperty);
+                return runtimeAccessors.GetOrAdd(
+                    GetRuntimeType(instance),
+                    runtimeType => CreateRuntimePropertyAccessor<TResult>(runtimeType, type, propertyName))(instance);
             }
 
             if (type == null)
@@ -23,7 +29,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
                 return FallbackAccessor;
             }
 
-            PropertyInfo property = type.GetTypeInfo().GetDeclaredProperty(propertyName);
+            PropertyInfo property = GetInstanceProperty(type, propertyName);
             if (property == null || property.GetMethod == null)
             {
                 return FallbackAccessor;
@@ -33,14 +39,21 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             Func<object, TResult> accessor = CreateObjectAccessor<TResult>(type, property.GetMethod);
             return instance => type.IsInstanceOfType(instance)
                 ? accessor(instance)
-                : InvokeComMember<TResult>(instance, propertyName, BindingFlags.GetProperty);
+                : FallbackAccessor(instance);
         }
 
         public static Action<object, TValue> CreatePropertySetter<TValue>(Type type, Type valueType, string propertyName)
         {
+            ConcurrentDictionary<Type, Action<object, TValue>> runtimeAccessors =
+                new ConcurrentDictionary<Type, Action<object, TValue>>();
+
             void FallbackAccessor(object instance, TValue value)
             {
-                InvokeComMember<object>(instance, propertyName, BindingFlags.SetProperty, value);
+                runtimeAccessors.GetOrAdd(
+                    GetRuntimeType(instance),
+                    runtimeType => CreateRuntimePropertySetter<TValue>(runtimeType, type, valueType, propertyName))(
+                        instance,
+                        value);
             }
 
             if (type == null)
@@ -48,7 +61,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
                 return FallbackAccessor;
             }
 
-            PropertyInfo property = type.GetTypeInfo().GetDeclaredProperty(propertyName);
+            PropertyInfo property = GetInstanceProperty(type, propertyName);
             if (property == null || property.SetMethod == null)
             {
                 return FallbackAccessor;
@@ -63,20 +76,25 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
                 }
                 else
                 {
-                    InvokeComMember<object>(instance, propertyName, BindingFlags.SetProperty, value);
+                    FallbackAccessor(instance, value);
                 }
             };
         }
 
         public static Func<object, TArg, TResult> CreateMethodAccessor<TArg, TResult>(Type type, Type argumentType, string methodName)
         {
+            ConcurrentDictionary<Type, Func<object, TArg, TResult>> runtimeAccessors =
+                new ConcurrentDictionary<Type, Func<object, TArg, TResult>>();
+
             TResult FallbackAccessor(object instance, TArg argument)
             {
-                return InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument);
+                return runtimeAccessors.GetOrAdd(
+                    GetRuntimeType(instance),
+                    runtimeType => CreateRuntimeMethodAccessor<TArg, TResult>(
+                        runtimeType,
+                        type,
+                        argumentType,
+                        methodName))(instance, argument);
             }
 
             if (type == null)
@@ -94,11 +112,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             Func<object, TArg, TResult> accessor = CreateObjectAccessor<TArg, TResult>(type, method);
             return (instance, argument) => type.IsInstanceOfType(instance)
                 ? accessor(instance, argument)
-                : InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument);
+                : FallbackAccessor(instance, argument);
         }
 
         public static Func<object, TArg1, TArg2, TResult> CreateMethodAccessor<TArg1, TArg2, TResult>(
@@ -107,14 +121,19 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             Type argument2Type,
             string methodName)
         {
+            ConcurrentDictionary<Type, Func<object, TArg1, TArg2, TResult>> runtimeAccessors =
+                new ConcurrentDictionary<Type, Func<object, TArg1, TArg2, TResult>>();
+
             TResult FallbackAccessor(object instance, TArg1 argument1, TArg2 argument2)
             {
-                return InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument1,
-                    argument2);
+                return runtimeAccessors.GetOrAdd(
+                    GetRuntimeType(instance),
+                    runtimeType => CreateRuntimeMethodAccessor<TArg1, TArg2, TResult>(
+                        runtimeType,
+                        type,
+                        argument1Type,
+                        argument2Type,
+                        methodName))(instance, argument1, argument2);
             }
 
             if (type == null)
@@ -132,12 +151,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             Func<object, TArg1, TArg2, TResult> accessor = CreateObjectAccessor<TArg1, TArg2, TResult>(type, method);
             return (instance, argument1, argument2) => type.IsInstanceOfType(instance)
                 ? accessor(instance, argument1, argument2)
-                : InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument1,
-                    argument2);
+                : FallbackAccessor(instance, argument1, argument2);
         }
 
         public static Type FindType(params string[] typeNames)
@@ -167,10 +181,17 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             return null;
         }
 
+        private static PropertyInfo GetInstanceProperty(Type type, string propertyName)
+        {
+            return type.GetProperty(
+                propertyName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        }
+
         private static MethodInfo GetInstanceMethod(Type type, string methodName, params Type[] parameterTypes)
         {
-            return type.GetTypeInfo().GetDeclaredMethods(methodName)
-                .SingleOrDefault(method => !method.IsStatic && HasParameters(method, parameterTypes));
+            return type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .SingleOrDefault(method => method.Name == methodName && HasParameters(method, parameterTypes));
         }
 
         private static bool HasParameters(MethodInfo method, Type[] parameterTypes)
@@ -192,33 +213,138 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             return true;
         }
 
-        private static string GetMemberName(string methodName)
-        {
-            const string GetterPrefix = "get_";
-            return methodName.StartsWith(GetterPrefix, StringComparison.Ordinal)
-                ? methodName.Substring(GetterPrefix.Length)
-                : methodName;
-        }
-
-        private static TResult InvokeComMember<TResult>(
-            object instance,
-            string memberName,
-            BindingFlags flags,
-            params object[] arguments)
+        private static Type GetRuntimeType(object instance)
         {
             if (instance == null)
             {
                 throw new NullReferenceException();
             }
 
-            object result = instance.GetType().InvokeMember(
-                memberName,
-                BindingFlags.Instance | BindingFlags.Public | flags,
-                null,
-                instance,
-                arguments,
-                CultureInfo.InvariantCulture);
-            return result == null ? default(TResult) : (TResult)result;
+            return instance.GetType();
+        }
+
+        private static Func<object, TResult> CreateRuntimePropertyAccessor<TResult>(
+            Type runtimeType,
+            Type declaredType,
+            string propertyName)
+        {
+            PropertyInfo property = GetInstanceProperty(runtimeType, propertyName);
+            if (property != null && property.GetMethod != null)
+            {
+                ValidateResultType<TResult>(property.PropertyType);
+                return CreateObjectAccessor<TResult>(runtimeType, property.GetMethod);
+            }
+
+            property = declaredType == null ? null : GetInstanceProperty(declaredType, propertyName);
+            if (property != null && property.GetMethod != null)
+            {
+                ValidateResultType<TResult>(property.PropertyType);
+                Func<object, TResult> accessor = CreateObjectAccessor<TResult>(declaredType, property.GetMethod);
+                return instance => accessor(GetTypedObject(instance, declaredType));
+            }
+
+            throw new MissingMemberException(runtimeType.FullName, propertyName);
+        }
+
+        private static Action<object, TValue> CreateRuntimePropertySetter<TValue>(
+            Type runtimeType,
+            Type declaredType,
+            Type valueType,
+            string propertyName)
+        {
+            PropertyInfo property = GetInstanceProperty(runtimeType, propertyName);
+            if (property != null && property.SetMethod != null)
+            {
+                return CreateObjectSetter<TValue>(runtimeType, property.SetMethod, valueType);
+            }
+
+            property = declaredType == null ? null : GetInstanceProperty(declaredType, propertyName);
+            if (property != null && property.SetMethod != null)
+            {
+                Action<object, TValue> accessor = CreateObjectSetter<TValue>(declaredType, property.SetMethod, valueType);
+                return (instance, value) => accessor(GetTypedObject(instance, declaredType), value);
+            }
+
+            throw new MissingMemberException(runtimeType.FullName, propertyName);
+        }
+
+        private static Func<object, TArg, TResult> CreateRuntimeMethodAccessor<TArg, TResult>(
+            Type runtimeType,
+            Type declaredType,
+            Type argumentType,
+            string methodName)
+        {
+            MethodInfo method = GetInstanceMethod(runtimeType, methodName, argumentType);
+            if (method != null)
+            {
+                ValidateResultType<TResult>(method.ReturnType);
+                return CreateObjectAccessor<TArg, TResult>(runtimeType, method);
+            }
+
+            method = declaredType == null ? null : GetInstanceMethod(declaredType, methodName, argumentType);
+            if (method != null)
+            {
+                ValidateResultType<TResult>(method.ReturnType);
+                Func<object, TArg, TResult> accessor = CreateObjectAccessor<TArg, TResult>(declaredType, method);
+                return (instance, argument) => accessor(GetTypedObject(instance, declaredType), argument);
+            }
+
+            throw new MissingMemberException(runtimeType.FullName, methodName);
+        }
+
+        private static Func<object, TArg1, TArg2, TResult> CreateRuntimeMethodAccessor<TArg1, TArg2, TResult>(
+            Type runtimeType,
+            Type declaredType,
+            Type argument1Type,
+            Type argument2Type,
+            string methodName)
+        {
+            MethodInfo method = GetInstanceMethod(runtimeType, methodName, argument1Type, argument2Type);
+            if (method != null)
+            {
+                ValidateResultType<TResult>(method.ReturnType);
+                return CreateObjectAccessor<TArg1, TArg2, TResult>(runtimeType, method);
+            }
+
+            method = declaredType == null ? null : GetInstanceMethod(declaredType, methodName, argument1Type, argument2Type);
+            if (method != null)
+            {
+                ValidateResultType<TResult>(method.ReturnType);
+                Func<object, TArg1, TArg2, TResult> accessor =
+                    CreateObjectAccessor<TArg1, TArg2, TResult>(declaredType, method);
+                return (instance, argument1, argument2) =>
+                    accessor(GetTypedObject(instance, declaredType), argument1, argument2);
+            }
+
+            throw new MissingMemberException(runtimeType.FullName, methodName);
+        }
+
+        private static object GetTypedObject(object instance, Type type)
+        {
+            if (instance == null)
+            {
+                throw new NullReferenceException();
+            }
+
+            if (type.IsInstanceOfType(instance))
+            {
+                return instance;
+            }
+
+            if (!Marshal.IsComObject(instance))
+            {
+                throw new InvalidCastException();
+            }
+
+            IntPtr unknown = Marshal.GetIUnknownForObject(instance);
+            try
+            {
+                return Marshal.GetTypedObjectForIUnknown(unknown, type);
+            }
+            finally
+            {
+                Marshal.Release(unknown);
+            }
         }
 
         private static void ValidateResultType<TResult>(Type resultType)
