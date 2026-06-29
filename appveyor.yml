@@ -137,7 +137,7 @@ test_script:
       $host.SetShouldExit($testExitCode)
     }
 artifacts:
-- path: '**\*.vsix'
+- path: 'Tvl.VisualStudio.JustMyCodeToggle\bin\**\*.vsix'
 - path: 'TestResults\**\*'
   name: test results
 - path: '\msbuild.binlog'
