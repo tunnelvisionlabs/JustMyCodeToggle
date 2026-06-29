@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle\JustMyCodeToggleConstants.cs" Link="JustMyCodeToggleConstants.cs" />
     <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\JustMyCodeToggleIntegrationTest.cs" Link="JustMyCodeToggleIntegrationTest.cs" />
+    <Compile Include="..\Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests.14\SolutionExplorerInProcess.cs" Link="SolutionExplorerInProcess.cs" />
   </ItemGroup>
 
   <ItemGroup>
