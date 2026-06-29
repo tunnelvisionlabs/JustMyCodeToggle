@@ -22,8 +22,18 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
 
                 if (completedTask == monitor.FailureTask)
                 {
-                    await Task.WhenAny(testTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
-                    throw await monitor.FailureTask.ConfigureAwait(false);
+                    Exception dialogException = await monitor.FailureTask.ConfigureAwait(false);
+
+                    try
+                    {
+                        await testTask.ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(dialogException.Message, ex);
+                    }
+
+                    throw dialogException;
                 }
 
                 await testTask.ConfigureAwait(false);
