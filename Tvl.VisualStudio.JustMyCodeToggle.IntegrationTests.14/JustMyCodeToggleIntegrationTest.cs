@@ -16,12 +16,17 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.IntegrationTests
     using DTE = EnvDTE.DTE;
     using Property = EnvDTE.Property;
 
-    public class JustMyCodeToggleIntegrationTest : AbstractIdeIntegrationTest
+    public class JustMyCodeToggleIntegrationTest : JustMyCodeToggleIntegrationTestBase
     {
         private const string CommandName = "DebuggerContextMenus.CallStackWindow.Debug.JustMyCodeToggle";
 
-        [JustMyCodeToggleIdeFact(MinVersion = VisualStudioVersion.VS2015)]
-        public async Task CommandButtonTogglesJustMyCodeAsync()
+        [IdeFact(MinVersion = VisualStudioVersion.VS2015)]
+        public Task CommandButtonTogglesJustMyCodeAsync()
+        {
+            return RunWithUnexpectedModalDialogDetectionAsync(CommandButtonTogglesJustMyCodeCoreAsync);
+        }
+
+        private async Task CommandButtonTogglesJustMyCodeCoreAsync()
         {
             DTE dte = await TestServices.Shell.GetRequiredGlobalServiceAsync<_DTE, DTE>(HangMitigatingCancellationToken);
             Assert.NotNull(dte);
