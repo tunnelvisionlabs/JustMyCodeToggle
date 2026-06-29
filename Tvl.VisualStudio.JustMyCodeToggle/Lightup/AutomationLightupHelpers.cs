@@ -4,7 +4,6 @@
 namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
 {
     using System;
-    using System.Globalization;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -15,7 +14,12 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
         {
             TResult FallbackAccessor(object instance)
             {
-                return InvokeComMember<TResult>(instance, propertyName, BindingFlags.GetProperty);
+                if (instance == null)
+                {
+                    throw new NullReferenceException();
+                }
+
+                return default(TResult);
             }
 
             if (type == null)
@@ -30,17 +34,17 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             }
 
             ValidateResultType<TResult>(property.PropertyType);
-            Func<object, TResult> accessor = CreateObjectAccessor<TResult>(type, property.GetMethod);
-            return instance => type.IsInstanceOfType(instance)
-                ? accessor(instance)
-                : InvokeComMember<TResult>(instance, propertyName, BindingFlags.GetProperty);
+            return CreateObjectAccessor<TResult>(type, property.GetMethod);
         }
 
         public static Action<object, TValue> CreatePropertySetter<TValue>(Type type, Type valueType, string propertyName)
         {
             void FallbackAccessor(object instance, TValue value)
             {
-                InvokeComMember<object>(instance, propertyName, BindingFlags.SetProperty, value);
+                if (instance == null)
+                {
+                    throw new NullReferenceException();
+                }
             }
 
             if (type == null)
@@ -49,34 +53,21 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             }
 
             PropertyInfo property = type.GetTypeInfo().GetDeclaredProperty(propertyName);
-            if (property == null || property.SetMethod == null)
-            {
-                return FallbackAccessor;
-            }
-
-            Action<object, TValue> accessor = CreateObjectSetter<TValue>(type, property.SetMethod, valueType);
-            return (instance, value) =>
-            {
-                if (type.IsInstanceOfType(instance))
-                {
-                    accessor(instance, value);
-                }
-                else
-                {
-                    InvokeComMember<object>(instance, propertyName, BindingFlags.SetProperty, value);
-                }
-            };
+            return property == null || property.SetMethod == null
+                ? FallbackAccessor
+                : CreateObjectSetter<TValue>(type, property.SetMethod, valueType);
         }
 
         public static Func<object, TArg, TResult> CreateMethodAccessor<TArg, TResult>(Type type, Type argumentType, string methodName)
         {
             TResult FallbackAccessor(object instance, TArg argument)
             {
-                return InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument);
+                if (instance == null)
+                {
+                    throw new NullReferenceException();
+                }
+
+                return default(TResult);
             }
 
             if (type == null)
@@ -91,14 +82,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             }
 
             ValidateResultType<TResult>(method.ReturnType);
-            Func<object, TArg, TResult> accessor = CreateObjectAccessor<TArg, TResult>(type, method);
-            return (instance, argument) => type.IsInstanceOfType(instance)
-                ? accessor(instance, argument)
-                : InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument);
+            return CreateObjectAccessor<TArg, TResult>(type, method);
         }
 
         public static Func<object, TArg1, TArg2, TResult> CreateMethodAccessor<TArg1, TArg2, TResult>(
@@ -109,12 +93,12 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
         {
             TResult FallbackAccessor(object instance, TArg1 argument1, TArg2 argument2)
             {
-                return InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument1,
-                    argument2);
+                if (instance == null)
+                {
+                    throw new NullReferenceException();
+                }
+
+                return default(TResult);
             }
 
             if (type == null)
@@ -129,15 +113,7 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             }
 
             ValidateResultType<TResult>(method.ReturnType);
-            Func<object, TArg1, TArg2, TResult> accessor = CreateObjectAccessor<TArg1, TArg2, TResult>(type, method);
-            return (instance, argument1, argument2) => type.IsInstanceOfType(instance)
-                ? accessor(instance, argument1, argument2)
-                : InvokeComMember<TResult>(
-                    instance,
-                    GetMemberName(methodName),
-                    BindingFlags.GetProperty | BindingFlags.InvokeMethod,
-                    argument1,
-                    argument2);
+            return CreateObjectAccessor<TArg1, TArg2, TResult>(type, method);
         }
 
         public static Type FindType(params string[] typeNames)
@@ -190,35 +166,6 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
             }
 
             return true;
-        }
-
-        private static string GetMemberName(string methodName)
-        {
-            const string GetterPrefix = "get_";
-            return methodName.StartsWith(GetterPrefix, StringComparison.Ordinal)
-                ? methodName.Substring(GetterPrefix.Length)
-                : methodName;
-        }
-
-        private static TResult InvokeComMember<TResult>(
-            object instance,
-            string memberName,
-            BindingFlags flags,
-            params object[] arguments)
-        {
-            if (instance == null)
-            {
-                throw new NullReferenceException();
-            }
-
-            object result = instance.GetType().InvokeMember(
-                memberName,
-                BindingFlags.Instance | BindingFlags.Public | flags,
-                null,
-                instance,
-                arguments,
-                CultureInfo.InvariantCulture);
-            return result == null ? default(TResult) : (TResult)result;
         }
 
         private static void ValidateResultType<TResult>(Type resultType)
