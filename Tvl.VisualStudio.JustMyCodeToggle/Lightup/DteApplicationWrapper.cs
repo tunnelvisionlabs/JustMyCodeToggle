@@ -15,10 +15,10 @@ namespace Tvl.VisualStudio.JustMyCodeToggle.Lightup
         static DteApplicationWrapper()
         {
             WrappedType = AutomationLightupHelpers.FindType(
+                "EnvDTE.DTE, Microsoft.VisualStudio.Interop",
                 "EnvDTE._DTE, EnvDTE",
                 "EnvDTE._DTE, envdte",
-                "EnvDTE._DTE, Microsoft.VisualStudio.Interop",
-                "EnvDTE._DTE");
+                "EnvDTE.DTE");
             GetPropertiesAccessor = AutomationLightupHelpers.CreateMethodAccessor<string, string, object>(
                 WrappedType,
                 typeof(string),
